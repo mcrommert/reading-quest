@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+*.pyo
+
+# your real family + data — never commit these
+reader_config.py
+reading.db
+*.db
+data/
+.env
+
+# google calendar service-account key
+gcal-credentials.json
+*credentials*.json

@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Summer Reading — Books Read</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500;1,6..72,600&family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF6EE;
+    --bg-2: #F2EBDA;
+    --ink: #1A1814;
+    --ink-2: #5A5247;
+    --ink-3: #8A8275;
+    --paper: #FFFCF4;
+    --sun: oklch(75% 0.13 70);
+    --sun-deep: oklch(58% 0.13 55);
+    --sea: oklch(52% 0.10 230);
+    --sea-deep: oklch(38% 0.10 235);
+    --leaf: oklch(55% 0.10 145);
+    --leaf-soft: #9CB776;
+    --coral: oklch(64% 0.14 30);
+    --serif: 'Newsreader', ui-serif, Georgia, serif;
+    --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: var(--sans); font-size: 14px; line-height: 1.5;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(1200px 600px at 90% -10%, rgba(255,210,140,0.20), transparent 60%),
+      radial-gradient(900px 500px at -5% 110%, rgba(150,190,210,0.16), transparent 60%);
+  }
+  a { color: inherit; }
+
+  .frame { max-width: 1100px; margin: 0 auto; padding: 28px 24px 80px; }
+
+  /* ---------- header ---------- */
+  .topbar {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 18px; padding-bottom: 18px;
+    border-bottom: 1.5px solid var(--ink); margin-bottom: 24px;
+  }
+  .brand { display: flex; align-items: baseline; gap: 14px; }
+  .brand-mark {
+    width: 38px; height: 38px;
+    border: 1.5px solid var(--ink); border-radius: 50%;
+    display: grid; place-items: center; background: var(--sun);
+    font-family: var(--serif); font-style: italic; font-weight: 600;
+    font-size: 18px; transform: translateY(4px);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  h1 {
+    font-family: var(--serif); font-weight: 500; font-size: 38px;
+    letter-spacing: -0.01em; line-height: 1; margin: 0; white-space: nowrap;
+  }
+  h1 em { font-style: italic; color: var(--sun-deep); font-weight: 500; }
+  .subtitle {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--ink-2); margin-top: 6px;
+  }
+  .back-link {
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--ink-2); text-decoration: none; white-space: nowrap;
+    padding: 8px 14px; border: 1px solid var(--ink); background: var(--paper);
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+  .back-link:hover { background: var(--sun); }
+  .back-link:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+
+  /* ---------- tabs (kid switcher) ---------- */
+  .tabs {
+    display: inline-flex; gap: 0;
+    border: 1.5px solid var(--ink); background: var(--paper);
+    box-shadow: 3px 3px 0 var(--ink);
+    margin-bottom: 22px;
+  }
+  .tab {
+    appearance: none; border: 0; background: transparent;
+    cursor: pointer;
+    font-family: var(--serif); font-size: 22px; font-weight: 500;
+    padding: 10px 22px; line-height: 1;
+    border-right: 1px solid var(--ink);
+    display: inline-flex; align-items: center; gap: 10px;
+    color: var(--ink-2);
+  }
+  .tab:last-child { border-right: none; }
+  .tab .monogram {
+    width: 26px; height: 26px;
+    border: 1.5px solid var(--ink); border-radius: 50%;
+    display: grid; place-items: center;
+    font-family: var(--serif); font-style: italic; font-weight: 600;
+    font-size: 14px; line-height: 1;
+    background: var(--bg);
+  }
+  .tab[data-kid="alex"] .monogram { background: var(--sun); color: var(--ink); }
+  .tab[data-kid="sam"] .monogram { background: var(--sea); color: var(--paper); }
+  .tab .count {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--ink-3); letter-spacing: 0.1em;
+  }
+  .tab.active {
+    background: var(--bg);
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .tab.active .count { color: var(--ink-2); }
+  .tab:hover:not(.active) { background: var(--bg-2); }
+
+  /* ---------- per-kid stats strip ---------- */
+  .totals {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+  .stat {
+    border: 1.5px solid var(--ink); background: var(--paper);
+    box-shadow: 3px 3px 0 var(--ink);
+    padding: 12px 14px;
+  }
+  .stat .lbl {
+    font-family: var(--mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-2);
+  }
+  .stat .num {
+    font-family: var(--serif); font-size: 30px; font-weight: 600;
+    letter-spacing: -0.02em; line-height: 1.05;
+    margin-top: 6px;
+  }
+  .stat .unit {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--ink-3); margin-left: 4px;
+  }
+  .view.w .stat.accent .num { color: var(--sun-deep); }
+  .view.m .stat.accent .num { color: var(--sea-deep); }
+
+  /* ---------- controls ---------- */
+  .controls {
+    display: flex; gap: 16px; align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-2);
+  }
+  .controls .group {
+    display: inline-flex; gap: 0;
+    border: 1px solid var(--ink); background: var(--paper);
+    overflow: hidden;
+  }
+  .controls .chip {
+    appearance: none; border: 0; background: transparent;
+    font: inherit; color: inherit; cursor: pointer;
+    padding: 8px 12px; border-right: 1px solid var(--ink);
+    text-transform: uppercase; letter-spacing: 0.12em;
+  }
+  .controls .chip:last-child { border-right: none; }
+  .controls .chip.active { background: var(--sun); color: var(--ink); font-weight: 600; }
+  .controls .chip:hover:not(.active) { background: var(--bg-2); }
+  .controls .label { color: var(--ink-3); }
+
+  /* ---------- books list ---------- */
+  .books {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+  }
+  @media (max-width: 880px) {
+    .books { grid-template-columns: 1fr; }
+    .totals { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 540px) {
+    .totals { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  .book {
+    border: 1.5px solid var(--ink); background: var(--paper);
+    box-shadow: 4px 4px 0 var(--ink);
+    padding: 16px 18px 18px;
+    display: grid; grid-template-rows: auto auto 1fr auto;
+    gap: 10px;
+    position: relative;
+  }
+  .book.finished { background: linear-gradient(180deg, #F5F8EC 0%, var(--paper) 50%); }
+
+  .book .row1 {
+    display: grid; grid-template-columns: 1fr auto;
+    gap: 14px; align-items: start;
+  }
+  .book .title-block { min-width: 0; }
+  .book .title {
+    font-family: var(--serif); font-style: italic;
+    font-weight: 500; font-size: 22px;
+    line-height: 1.15; letter-spacing: -0.005em;
+    color: var(--ink);
+    text-wrap: pretty;
+  }
+  .book .points {
+    text-align: right; line-height: 1; flex: 0 0 auto;
+  }
+  .book .points .num {
+    font-family: var(--serif); font-size: 32px; font-weight: 600;
+    letter-spacing: -0.02em; display: block;
+  }
+  .view.w .book .points .num { color: var(--sun-deep); }
+  .view.m .book .points .num { color: var(--sea-deep); }
+  .book .points .lbl {
+    font-family: var(--mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-2); margin-top: 4px;
+  }
+
+  /* badges row */
+  .badges {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .badge {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.1em;
+    padding: 3px 8px;
+    border: 1px solid var(--ink);
+    background: var(--bg);
+    color: var(--ink-2);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .badge.lexile  { background: var(--bg-2); color: var(--ink); font-weight: 600; }
+  .badge.format  { background: var(--paper); }
+  .badge.tier    { background: var(--paper); }
+  .badge.classification.modern { background: color-mix(in oklch, var(--sun) 30%, var(--paper)); color: var(--ink); }
+  .badge.classification.masterpiece { background: var(--leaf-soft); color: var(--ink); font-weight: 600; }
+  .badge.interest { background: #f3e8d8; }
+
+  /* stats inside book card */
+  .book-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    border: 1px solid var(--ink);
+    background: var(--bg);
+  }
+  .book-stat {
+    padding: 8px 12px;
+    border-right: 1px solid var(--ink);
+    text-align: center;
+  }
+  .book-stat:last-child { border-right: none; }
+  .book-stat .num {
+    font-family: var(--serif); font-size: 20px;
+    font-weight: 600; line-height: 1; letter-spacing: -0.01em;
+  }
+  .book-stat .lbl {
+    display: block; margin-top: 4px;
+    font-family: var(--mono); font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-2);
+  }
+
+  /* footer dates */
+  .book-dates {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 10px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-3);
+  }
+  .book-dates b { color: var(--ink); font-weight: 600; }
+  .finished-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 9px;
+    background: var(--leaf-soft); border: 1px solid var(--ink);
+    border-radius: 999px;
+    font-family: var(--mono); font-size: 10px;
+    font-weight: 600; letter-spacing: 0.12em;
+    color: var(--ink);
+  }
+  .finished-pill::before {
+    content: ''; width: 7px; height: 7px;
+    border-radius: 50%; background: var(--ink);
+  }
+
+  /* empty + loading */
+  .empty {
+    border: 1.5px dashed var(--ink-3);
+    padding: 60px 24px;
+    text-align: center;
+    color: var(--ink-2);
+    background: var(--paper);
+  }
+  .empty .big {
+    font-family: var(--serif); font-style: italic;
+    font-size: 22px; color: var(--ink); margin-bottom: 8px;
+  }
+  .empty code {
+    font-family: var(--mono); background: var(--bg-2);
+    border: 1px solid var(--ink); padding: 1px 6px; margin: 0 2px;
+  }
+
+  body:not(.lib-ready) .books,
+  body:not(.lib-ready) .totals { opacity: 0.4; }
+
+  /* live indicator */
+  .live {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-2); white-space: nowrap;
+  }
+  .live .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--leaf);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  .live.mock .dot { background: var(--ink-3); animation: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- header -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">SR</div>
+      <div>
+        <h1>Books <em>Read</em></h1>
+        <div class="subtitle">Every book Alex & Sam have opened this summer</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:14px; align-items:center;">
+      <span class="live" id="live"><span class="dot"></span><span id="live-state">Live</span></span>
+      <a class="back-link" href="/board/">← Back to game board</a>
+    </div>
+  </div>
+
+  <!-- kid tabs -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-kid="alex">
+      <span class="monogram">W</span>
+      Alex
+      <span class="count" data-kid-count="alex">— books</span>
+    </button>
+    <button class="tab" data-kid="sam">
+      <span class="monogram">M</span>
+      Sam
+      <span class="count" data-kid-count="sam">— books</span>
+    </button>
+  </div>
+
+  <!-- per-kid views -->
+  <div class="view active w" data-view="alex">
+    <div class="totals">
+      <div class="stat accent"><div class="lbl">Books finished</div><div class="num"><span data-stat="books_finished">—</span></div></div>
+      <div class="stat"><div class="lbl">Books opened</div><div class="num"><span data-stat="books_total">—</span></div></div>
+      <div class="stat"><div class="lbl">Total pages</div><div class="num"><span data-stat="pages">—</span></div></div>
+      <div class="stat accent"><div class="lbl">Total points</div><div class="num"><span data-stat="points">—</span></div></div>
+      <div class="stat"><div class="lbl">Sessions</div><div class="num"><span data-stat="sessions">—</span></div></div>
+    </div>
+
+    <div class="controls">
+      <span class="label">Show</span>
+      <div class="group filter">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="finished">Finished</button>
+        <button class="chip" data-filter="reading">In progress</button>
+      </div>
+      <span class="label">Sort</span>
+      <div class="group sort">
+        <button class="chip active" data-sort="recent">Recent</button>
+        <button class="chip" data-sort="finished_date">Finished</button>
+        <button class="chip" data-sort="points">Points</button>
+        <button class="chip" data-sort="pages">Pages</button>
+        <button class="chip" data-sort="title">A–Z</button>
+      </div>
+    </div>
+
+    <div class="books" data-books></div>
+  </div>
+
+  <div class="view m" data-view="sam">
+    <div class="totals">
+      <div class="stat accent"><div class="lbl">Books finished</div><div class="num"><span data-stat="books_finished">—</span></div></div>
+      <div class="stat"><div class="lbl">Books opened</div><div class="num"><span data-stat="books_total">—</span></div></div>
+      <div class="stat"><div class="lbl">Total pages</div><div class="num"><span data-stat="pages">—</span></div></div>
+      <div class="stat accent"><div class="lbl">Total points</div><div class="num"><span data-stat="points">—</span></div></div>
+      <div class="stat"><div class="lbl">Sessions</div><div class="num"><span data-stat="sessions">—</span></div></div>
+    </div>
+
+    <div class="controls">
+      <span class="label">Show</span>
+      <div class="group filter">
+        <button class="chip active" data-filter="all">All</button>
+        <button class="chip" data-filter="finished">Finished</button>
+        <button class="chip" data-filter="reading">In progress</button>
+      </div>
+      <span class="label">Sort</span>
+      <div class="group sort">
+        <button class="chip active" data-sort="recent">Recent</button>
+        <button class="chip" data-sort="finished_date">Finished</button>
+        <button class="chip" data-sort="points">Points</button>
+        <button class="chip" data-sort="pages">Pages</button>
+        <button class="chip" data-sort="title">A–Z</button>
+      </div>
+    </div>
+
+    <div class="books" data-books></div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ---------- offline mock ---------------------------------------------
+  const MOCK = {
+    today: { iso: "2026-07-01", label: "Wed, Jul 1" },
+    players: [
+      {
+        key: "alex", name: "Alex", monogram: "W", age: 7, grade: "2nd grade",
+        totals: { books_total: 11, books_finished: 3, pages: 842, minutes: 1740, points: 1740, sessions: 38 },
+        books: [
+          {
+            key: "boxcar-1", title: "The Boxcar Children",
+            lexile: 490, format: "chapter_book", format_label: "Chapter book",
+            classification: "modern_classic", classification_label: "Modern Classic",
+            interest_level: "MG", tier_label: "Stretch", pts_per_page: 1.75,
+            pages_read: 142, minutes_read: 240, points_earned: 213, sessions: 4,
+            finished: true, finished_date: "2026-06-29",
+            first_session: "2026-06-22", last_session: "2026-06-29"
+          },
+          {
+            key: "magic-th-1", title: "Magic Tree House: Dinosaurs Before Dark",
+            lexile: 240, format: "early_chapter_book", format_label: "Early chapter",
+            classification: "standard", classification_label: "",
+            interest_level: "LG", tier_label: "Easy", pts_per_page: 0.5,
+            pages_read: 64, minutes_read: 75, points_earned: 32, sessions: 1,
+            finished: true, finished_date: "2026-06-27",
+            first_session: "2026-06-27", last_session: "2026-06-27"
+          },
+          {
+            key: "dog-man-10", title: "Dog Man: Mothering Heights",
+            lexile: null, format: "graphic_novel", format_label: "Graphic novel",
+            classification: "standard", classification_label: "",
+            interest_level: "LG", tier_label: "", pts_per_page: 0.2,
+            pages_read: 56, minutes_read: 48, points_earned: 11.2, sessions: 1,
+            finished: true, finished_date: "2026-06-26",
+            first_session: "2026-06-26", last_session: "2026-06-26"
+          },
+          {
+            key: "charlottes-web", title: "Charlotte's Web",
+            lexile: 680, format: "chapter_book", format_label: "Chapter book",
+            classification: "masterpiece", classification_label: "Masterpiece",
+            interest_level: "MG", tier_label: "Big Stretch", pts_per_page: 2.5,
+            pages_read: 86, minutes_read: 132, points_earned: 215, sessions: 3,
+            finished: false, finished_date: null,
+            first_session: "2026-06-30", last_session: "2026-07-01"
+          },
+          {
+            key: "junie-b-12", title: "Junie B. Jones Is (Almost) a Flower Girl",
+            lexile: 410, format: "early_chapter_book", format_label: "Early chapter",
+            classification: "standard", classification_label: "",
+            interest_level: "LG", tier_label: "Comfort", pts_per_page: 1.0,
+            pages_read: 72, minutes_read: 95, points_earned: 72, sessions: 2,
+            finished: false, finished_date: null,
+            first_session: "2026-06-25", last_session: "2026-06-28"
+          },
+          {
+            key: "frog-toad", title: "Frog and Toad Are Friends",
+            lexile: 330, format: "easy_reader", format_label: "Easy reader",
+            classification: "modern_classic", classification_label: "Modern Classic",
+            interest_level: "LG", tier_label: "", pts_per_page: 0.5,
+            pages_read: 64, minutes_read: 90, points_earned: 32, sessions: 2,
+            finished: false, finished_date: null,
+            first_session: "2026-06-18", last_session: "2026-06-20"
+          }
+        ]
+      },
+      {
+        key: "sam", name: "Sam", monogram: "M", age: 10, grade: "6th grade",
+        totals: { books_total: 14, books_finished: 7, pages: 2240, minutes: 3120, points: 2440, sessions: 46 },
+        books: [
+          {
+            key: "hobbit", title: "The Hobbit",
+            lexile: 1000, format: "chapter_book", format_label: "Chapter book",
+            classification: "masterpiece", classification_label: "Masterpiece",
+            interest_level: "MG+", tier_label: "Comfort", pts_per_page: 1.5,
+            pages_read: 310, minutes_read: 480, points_earned: 465, sessions: 8,
+            finished: true, finished_date: "2026-06-30",
+            first_session: "2026-06-15", last_session: "2026-06-30"
+          },
+          {
+            key: "hp-4", title: "Harry Potter and the Goblet of Fire",
+            lexile: 880, format: "chapter_book", format_label: "Chapter book",
+            classification: "standard", classification_label: "",
+            interest_level: "MG", tier_label: "Comfort", pts_per_page: 1.0,
+            pages_read: 636, minutes_read: 720, points_earned: 636, sessions: 12,
+            finished: true, finished_date: "2026-06-25",
+            first_session: "2026-06-12", last_session: "2026-06-25"
+          },
+          {
+            key: "percy-1", title: "Percy Jackson: The Lightning Thief",
+            lexile: 740, format: "chapter_book", format_label: "Chapter book",
+            classification: "modern_classic", classification_label: "Modern Classic",
+            interest_level: "MG", tier_label: "Easy", pts_per_page: 0.75,
+            pages_read: 374, minutes_read: 410, points_earned: 281, sessions: 7,
+            finished: true, finished_date: "2026-06-22",
+            first_session: "2026-06-11", last_session: "2026-06-22"
+          },
+          {
+            key: "narnia-1", title: "The Lion, the Witch and the Wardrobe",
+            lexile: 940, format: "chapter_book", format_label: "Chapter book",
+            classification: "masterpiece", classification_label: "Masterpiece",
+            interest_level: "MG", tier_label: "Comfort", pts_per_page: 1.5,
+            pages_read: 208, minutes_read: 240, points_earned: 312, sessions: 4,
+            finished: true, finished_date: "2026-06-19",
+            first_session: "2026-06-13", last_session: "2026-06-19"
+          },
+          {
+            key: "wonder", title: "Wonder",
+            lexile: 790, format: "chapter_book", format_label: "Chapter book",
+            classification: "modern_classic", classification_label: "Modern Classic",
+            interest_level: "MG", tier_label: "Easy", pts_per_page: 0.75,
+            pages_read: 124, minutes_read: 165, points_earned: 93, sessions: 3,
+            finished: false, finished_date: null,
+            first_session: "2026-06-28", last_session: "2026-07-01"
+          },
+          {
+            key: "tolkien-lotr-1", title: "The Fellowship of the Ring",
+            lexile: 860, format: "dense_classic", format_label: "Dense classic",
+            classification: "masterpiece", classification_label: "Masterpiece",
+            interest_level: "UG", tier_label: "Comfort", pts_per_page: 1.5,
+            pages_read: 82, minutes_read: 120, points_earned: 123, sessions: 2,
+            finished: false, finished_date: null,
+            first_session: "2026-06-26", last_session: "2026-06-27"
+          },
+          {
+            key: "wrinkle-in-time", title: "A Wrinkle in Time",
+            lexile: 740, format: "chapter_book", format_label: "Chapter book",
+            classification: "masterpiece", classification_label: "Masterpiece",
+            interest_level: "MG", tier_label: "Easy", pts_per_page: 1.0,
+            pages_read: 232, minutes_read: 280, points_earned: 232, sessions: 5,
+            finished: true, finished_date: "2026-06-16",
+            first_session: "2026-06-11", last_session: "2026-06-16"
+          }
+        ]
+      }
+    ]
+  };
+
+  // ---------- state ----------------------------------------------------
+  const state = {
+    data: null,
+    filter: { alex: 'all',    sam: 'all' },
+    sort:   { alex: 'recent', sam: 'recent' },
+  };
+
+  // ---------- helpers --------------------------------------------------
+  const fmt = (n) => Number(n).toLocaleString();
+  const escapeHtml = (s) => String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+  const MONTH = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-').map(n => parseInt(n, 10));
+    return MONTH[m - 1] + ' ' + d;
+  }
+  function fmtMinutes(m) {
+    if (m < 60) return m + 'm';
+    const h = Math.floor(m / 60);
+    const r = m % 60;
+    return r === 0 ? h + 'h' : h + 'h ' + r + 'm';
+  }
+
+  // ---------- sort + filter -------------------------------------------
+  function applySortFilter(books, filterKey, sortKey) {
+    let out = books.slice();
+
+    if (filterKey === 'finished')      out = out.filter(b => b.finished);
+    else if (filterKey === 'reading')  out = out.filter(b => !b.finished);
+
+    out.sort((a, b) => {
+      switch (sortKey) {
+        case 'recent':
+          return (b.last_session || '').localeCompare(a.last_session || '');
+        case 'finished_date': {
+          const af = a.finished ? 0 : 1, bf = b.finished ? 0 : 1;
+          if (af !== bf) return af - bf;
+          return (b.finished_date || '').localeCompare(a.finished_date || '');
+        }
+        case 'points':
+          return b.points_earned - a.points_earned;
+        case 'pages':
+          return b.pages_read - a.pages_read;
+        case 'title':
+          return a.title.toLowerCase().localeCompare(b.title.toLowerCase());
+      }
+      return 0;
+    });
+    return out;
+  }
+
+  // ---------- render --------------------------------------------------
+  function bookCard(b) {
+    const badges = [];
+    if (b.lexile)               badges.push(`<span class="badge lexile">${b.lexile}L</span>`);
+    if (b.format_label)         badges.push(`<span class="badge format">${escapeHtml(b.format_label)}</span>`);
+    if (b.pts_per_page != null) {
+      const tierPrefix = b.tier_label ? escapeHtml(b.tier_label) + ' · ' : '';
+      badges.push(`<span class="badge tier">${tierPrefix}${b.pts_per_page} pts/pg</span>`);
+    }
+    if (b.classification && b.classification !== 'standard') {
+      const cls = b.classification === 'masterpiece' ? 'masterpiece'
+                : b.classification === 'modern_classic' ? 'modern' : '';
+      badges.push(`<span class="badge classification ${cls}">${escapeHtml(b.classification_label || '')}</span>`);
+    }
+    if (b.interest_level)       badges.push(`<span class="badge interest">AR ${escapeHtml(b.interest_level)}</span>`);
+
+    const finishedPill = b.finished
+      ? `<span class="finished-pill">Finished · ${fmtDate(b.finished_date)}</span>`
+      : '';
+
+    const dateLine = b.finished
+      ? `<span>First read <b>${fmtDate(b.first_session)}</b></span>`
+      : `<span>First read <b>${fmtDate(b.first_session)}</b> · Last read <b>${fmtDate(b.last_session)}</b></span>`;
+
+    return `
+      <article class="book${b.finished ? ' finished' : ''}">
+        <div class="row1">
+          <div class="title-block">
+            <div class="title">${escapeHtml(b.title)}</div>
+          </div>
+          <div class="points">
+            <span class="num">${fmt(Math.round(b.points_earned))}</span>
+            <div class="lbl">points</div>
+          </div>
+        </div>
+
+        <div class="badges">${badges.join('')}</div>
+
+        <div class="book-stats">
+          <div class="book-stat">
+            <div class="num">${fmt(b.pages_read)}</div>
+            <span class="lbl">Pages</span>
+          </div>
+          <div class="book-stat">
+            <div class="num">${b.sessions}</div>
+            <span class="lbl">Sessions</span>
+          </div>
+        </div>
+
+        <div class="book-dates">
+          ${dateLine}
+          ${finishedPill}
+        </div>
+      </article>
+    `;
+  }
+
+  function renderPlayer(p) {
+    const view = document.querySelector(`[data-view="${p.key}"]`);
+    if (!view) return;
+
+    // totals
+    view.querySelectorAll('[data-stat]').forEach(el => {
+      const stat = el.getAttribute('data-stat');
+      const v = p.totals[stat] ?? 0;
+      el.textContent = (stat === 'points' || stat === 'pages')
+        ? fmt(Math.round(v))
+        : v;
+    });
+
+    // tab count
+    const tabCount = document.querySelector(`[data-kid-count="${p.key}"]`);
+    if (tabCount) {
+      const f = p.totals.books_finished;
+      const t = p.totals.books_total;
+      tabCount.textContent = `${f} / ${t} books`;
+    }
+
+    // books list
+    const books = applySortFilter(p.books, state.filter[p.key], state.sort[p.key]);
+    const list  = view.querySelector('[data-books]');
+    if (books.length === 0) {
+      list.innerHTML = `
+        <div class="empty" style="grid-column: 1 / -1;">
+          <div class="big">No books match this filter</div>
+          <div>Log a session with <code>/read ${p.key.charAt(0)} "title" 30p 25m</code> in Mattermost.</div>
+        </div>`;
+    } else {
+      list.innerHTML = books.map(bookCard).join('');
+    }
+  }
+
+  function render() {
+    if (!state.data) return;
+    state.data.players.forEach(renderPlayer);
+    document.body.classList.add('lib-ready');
+  }
+
+  // ---------- tabs + chips ---------------------------------------------
+  document.getElementById('tabs').addEventListener('click', (e) => {
+    const t = e.target.closest('.tab');
+    if (!t) return;
+    document.querySelectorAll('#tabs .tab').forEach(b => b.classList.remove('active'));
+    t.classList.add('active');
+    const kid = t.getAttribute('data-kid');
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.querySelector(`[data-view="${kid}"]`).classList.add('active');
+  });
+
+  document.querySelectorAll('.view').forEach(view => {
+    const kid = view.getAttribute('data-view');
+    view.querySelectorAll('.group.filter .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        view.querySelectorAll('.group.filter .chip').forEach(b => b.classList.remove('active'));
+        c.classList.add('active');
+        state.filter[kid] = c.getAttribute('data-filter');
+        const p = state.data && state.data.players.find(p => p.key === kid);
+        if (p) renderPlayer(p);
+      });
+    });
+    view.querySelectorAll('.group.sort .chip').forEach(c => {
+      c.addEventListener('click', () => {
+        view.querySelectorAll('.group.sort .chip').forEach(b => b.classList.remove('active'));
+        c.classList.add('active');
+        state.sort[kid] = c.getAttribute('data-sort');
+        const p = state.data && state.data.players.find(p => p.key === kid);
+        if (p) renderPlayer(p);
+      });
+    });
+  });
+
+  // ---------- fetch + render ------------------------------------------
+  let __lastHash = null;
+
+  async function fetchAndRender() {
+    try {
+      const resp = await fetch('/library.json', { cache: 'no-store' });
+      if (!resp.ok) throw new Error('http ' + resp.status);
+      const data = await resp.json();
+      window.__libSource = 'live';
+      const h = JSON.stringify(data);
+      if (h === __lastHash) {
+        syncLive();
+        return;
+      }
+      __lastHash = h;
+      state.data = data;
+    } catch (e) {
+      console.warn('[library] live fetch failed (' + e.message + ') — using mock');
+      window.__libSource = 'mock';
+      const h = JSON.stringify(MOCK);
+      if (h === __lastHash) {
+        syncLive();
+        return;
+      }
+      __lastHash = h;
+      state.data = MOCK;
+    }
+    syncLive();
+    render();
+  }
+
+  function syncLive() {
+    const live = document.getElementById('live');
+    const state_lbl = document.getElementById('live-state');
+    if (window.__libSource === 'mock') {
+      live.classList.add('mock');
+      state_lbl.textContent = 'Mock data';
+    } else {
+      live.classList.remove('mock');
+      state_lbl.textContent = 'Live';
+    }
+  }
+
+  fetchAndRender();
+  setInterval(fetchAndRender, 10 * 1000);
+})();
+</script>
+
+</body>
+</html>

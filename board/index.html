@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Summer Reading — Game Board</title>
+<meta name="viewport" content="width=1440" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400;1,6..72,500&family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAF6EE;
+    --bg-2: #F2EBDA;
+    --ink: #1A1814;
+    --ink-2: #5A5247;
+    --ink-3: #8A8275;
+    --paper: #FFFCF4;
+    --sun: oklch(75% 0.13 70);
+    --sun-deep: oklch(58% 0.13 55);
+    --sea: oklch(52% 0.10 230);
+    --sea-deep: oklch(38% 0.10 235);
+    --leaf: oklch(55% 0.10 145);
+    --leaf-soft: #9CB776;
+    --coral: oklch(64% 0.14 30);
+    --serif: 'Newsreader', ui-serif, Georgia, serif;
+    --mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); }
+  body {
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.45;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(1200px 600px at 85% -10%, rgba(255,210,140,0.25), transparent 60%),
+      radial-gradient(900px 500px at -5% 110%, rgba(150,190,210,0.18), transparent 60%);
+  }
+  .frame { max-width: 1360px; margin: 0 auto; padding: 28px 32px 64px; }
+
+  /* ---------- top bar ---------- */
+  .topbar {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    gap: 24px; padding-bottom: 18px;
+    border-bottom: 1.5px solid var(--ink); margin-bottom: 18px;
+  }
+  .brand-block { display: flex; align-items: baseline; gap: 16px; }
+  .brand-mark {
+    width: 44px; height: 44px; border: 1.5px solid var(--ink);
+    border-radius: 50%; display: grid; place-items: center;
+    background: var(--sun); font-family: var(--serif);
+    font-style: italic; font-weight: 600; font-size: 22px;
+    transform: translateY(6px); box-shadow: 3px 3px 0 var(--ink);
+  }
+  h1.title { font-family: var(--serif); font-weight: 500; font-size: 42px;
+    letter-spacing: -0.01em; line-height: 1; margin: 0; white-space: nowrap; }
+  h1.title em { font-style: italic; color: var(--sun-deep); font-weight: 500; }
+  .subtitle {
+    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.14em; color: var(--ink-2); margin-top: 6px;
+  }
+  .meta {
+    display: flex; gap: 22px; align-items: center; flex-shrink: 0;
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--ink-2); white-space: nowrap;
+  }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .meta .live { display: inline-flex; align-items: center; gap: 6px; }
+  .meta .live .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--leaf); animation: pulse 2s ease-in-out infinite;
+  }
+  .meta.mock .live .dot { background: var(--ink-3); animation: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  /* ---------- strips (season + family) — side by side ---------- */
+  .strips {
+    display: grid; grid-template-columns: 1fr 1.1fr;
+    gap: 18px; margin-bottom: 22px;
+  }
+  .strip {
+    border: 1.5px solid var(--ink); background: var(--paper);
+    box-shadow: 4px 4px 0 var(--ink); padding: 10px 16px;
+    display: grid; grid-template-columns: auto 1fr auto;
+    gap: 14px; align-items: center;
+  }
+  .strip .label {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-2); white-space: nowrap;
+  }
+  .strip .endcap {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
+    color: var(--ink); white-space: nowrap;
+  }
+
+  /* season strip — striped progress bar with marker */
+  .season-bar {
+    position: relative; height: 14px; background: var(--bg-2);
+    border: 1px solid var(--ink); border-radius: 999px; overflow: hidden;
+  }
+  .season-bar .fill {
+    position: absolute; inset: 0; width: 32%;
+    background: repeating-linear-gradient(45deg, var(--sun) 0 6px, var(--sun-deep) 6px 12px);
+    border-right: 1px solid var(--ink);
+  }
+  .season-bar .marker {
+    position: absolute; top: 50%; width: 16px; height: 16px;
+    border-radius: 50%; background: var(--paper);
+    border: 1.5px solid var(--ink); transform: translate(-50%, -50%);
+  }
+  .season-row {
+    display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;
+  }
+
+  /* family-goal strip — split bar (W slice + M slice + empty) */
+  .family-bar {
+    position: relative; height: 14px;
+    background: var(--bg-2); border: 1px solid var(--ink);
+    border-radius: 999px; overflow: hidden;
+  }
+  .family-bar .fill-w, .family-bar .fill-m {
+    position: absolute; top: 0; bottom: 0;
+  }
+  .family-bar .fill-w {
+    left: 0; width: 17%;
+    background: repeating-linear-gradient(45deg, var(--sun) 0 5px, var(--sun-deep) 5px 10px);
+  }
+  .family-bar .fill-m {
+    left: 17%; width: 24%;
+    background: repeating-linear-gradient(45deg, var(--sea) 0 5px, var(--sea-deep) 5px 10px);
+  }
+  .family-bar .divider {
+    position: absolute; top: 0; bottom: 0; width: 1px; background: var(--ink);
+    pointer-events: none;
+  }
+  .family-stats {
+    font-family: var(--serif); font-size: 16px;
+    font-style: italic; color: var(--ink); white-space: nowrap;
+  }
+  .family-stats b { font-style: normal; font-weight: 600; }
+  .family-pct { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; }
+
+  /* ---------- two-player layout ---------- */
+  .players { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .player {
+    border: 1.5px solid var(--ink); background: var(--paper);
+    box-shadow: 6px 6px 0 var(--ink); padding: 22px 24px 24px;
+    position: relative;
+  }
+  .player.w { background: linear-gradient(180deg, #FFF7E0 0%, var(--paper) 35%); }
+  .player.m { background: linear-gradient(180deg, #E6F0F7 0%, var(--paper) 35%); }
+
+  .player-header {
+    display: flex; align-items: center; gap: 16px;
+    padding-bottom: 16px; border-bottom: 1px dashed var(--ink);
+    margin-bottom: 18px;
+  }
+  .monogram {
+    width: 62px; height: 62px; border: 1.5px solid var(--ink);
+    border-radius: 50%; display: grid; place-items: center;
+    font-family: var(--serif); font-size: 32px; font-weight: 600;
+    line-height: 1; flex-shrink: 0;
+  }
+  .player.w .monogram { background: var(--sun); }
+  .player.m .monogram { background: var(--sea); color: var(--paper); }
+
+  .who { flex: 1; }
+  .who .name {
+    font-family: var(--serif); font-size: 30px; font-weight: 600;
+    line-height: 1; letter-spacing: -0.01em;
+  }
+  .who .grade {
+    font-family: var(--mono); font-size: 11px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-2); margin-top: 6px;
+  }
+  .tier-chip {
+    display: inline-block; margin-left: 8px;
+    padding: 2px 8px; border: 1px solid var(--ink); border-radius: 999px;
+    background: var(--bg); color: var(--ink); font-weight: 600;
+  }
+  .dot {
+    display:inline-block; width:8px; height:8px; border-radius:50%;
+    background: var(--ink); vertical-align: 1px; margin-right: 6px;
+  }
+  .player.w .tier-chip .dot { background: var(--sun-deep); }
+  .player.m .tier-chip .dot { background: var(--sea); }
+
+  .score { text-align: right; line-height: 1; }
+  .score .num {
+    font-family: var(--serif); font-size: 48px; font-weight: 600;
+    letter-spacing: -0.02em; display: block;
+  }
+  .score .lbl {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: var(--ink-2); margin-top: 6px; white-space: nowrap;
+  }
+  .score .lbl b { color: var(--ink); font-weight: 600; }
+  .player.w .score .num { color: var(--sun-deep); }
+  .player.m .score .num { color: var(--sea-deep); }
+
+  /* ---------- quest track ---------- */
+  .quest { position: relative; padding: 8px 6px 0; }
+  .quest h3 {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.2em;
+    color: var(--ink-2); margin: 0 0 14px; font-weight: 600;
+    display: flex; justify-content: space-between;
+  }
+  .quest h3 .pts-to-go {
+    color: var(--ink); font-weight: 600; text-transform: none;
+    letter-spacing: 0; font-family: var(--serif);
+    font-style: italic; font-size: 15px;
+  }
+  .quest h3 .pts-to-go em { font-style: italic; }
+  .quest svg { display: block; width: 100%; height: auto; }
+
+  [data-milestone] .token {
+    fill: var(--paper); stroke: var(--ink); stroke-width: 1.5;
+  }
+  [data-milestone] .core { fill: var(--ink); display: none; }
+  [data-milestone] .num-label {
+    font-family: 'Geist Mono', monospace; font-size: 10px;
+    fill: var(--ink-2); font-weight: 500;
+  }
+  [data-milestone].cleared .token { fill: var(--leaf-soft); }
+  [data-milestone].next    .token { fill: #F2C268; }
+  [data-milestone].next    .num-label { fill: var(--ink); font-weight: 700; }
+  [data-milestone].locked  { opacity: 0.45; }
+  [data-milestone].locked  .core { display: inline; }
+  [data-quest-pawn] .pawn-bg {
+    fill: var(--paper); stroke: var(--ink); stroke-width: 1.5;
+  }
+  [data-quest-pawn] .pawn-letter {
+    font-family: 'Newsreader', serif; font-size: 13px;
+    font-style: italic; font-weight: 600; fill: var(--ink);
+  }
+  .player.w [data-quest-fg-path] { stroke: #a3691f; }
+  .player.m [data-quest-fg-path] { stroke: #2c4a6e; }
+
+  .quest-legend {
+    display: flex; justify-content: space-between;
+    margin-top: 12px; gap: 12px;
+  }
+  .stone {
+    flex: 1; border: 1px solid var(--ink); background: var(--bg);
+    padding: 9px 11px;
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.12em; color: var(--ink-2);
+    min-width: 0;
+  }
+  .stone .pts {
+    display: block; font-family: var(--serif); font-style: italic;
+    font-size: 19px; color: var(--ink); letter-spacing: 0;
+    text-transform: none; margin-top: 2px; font-weight: 500;
+    white-space: nowrap;
+  }
+  .stone.done { background: var(--paper); }
+  .stone.done .check {
+    float: right; margin-top: 2px;
+    width: 14px; height: 14px; border: 1.5px solid var(--ink);
+    border-radius: 50%; background: var(--leaf);
+  }
+  .stone.next   { background: var(--sun); border-width: 1.5px; }
+  .stone.locked { opacity: 0.55; }
+
+  /* ---------- bingo strip ---------- */
+  .bingo-strip {
+    margin-top: 14px;
+    border: 1px solid var(--ink); background: var(--bg);
+    padding: 10px 14px;
+    display: flex; align-items: center; gap: 16px;
+  }
+  .bingo-strip .lbl {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.2em;
+    color: var(--ink-2); font-weight: 600;
+    flex: 0 0 auto;
+  }
+  .bingo-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 13px);
+    grid-template-rows: repeat(5, 13px);
+    gap: 2px;
+    flex: 0 0 auto;
+  }
+  .bingo-cell {
+    display: block; width: 13px; height: 13px;
+    border: 1px solid var(--ink); background: var(--paper);
+    border-radius: 1px;
+  }
+  .bingo-cell.free {
+    background: var(--ink);
+  }
+  .player.w .bingo-cell.checked { background: var(--sun); }
+  .player.m .bingo-cell.checked { background: var(--sea); }
+  .bingo-cell.line {
+    background: var(--leaf-soft) !important;
+    border-color: var(--ink); border-width: 1.5px;
+  }
+  .bingo-summary {
+    font-family: var(--serif); font-style: italic; font-size: 15px;
+    color: var(--ink); flex: 1 1 auto; min-width: 0; white-space: nowrap;
+  }
+  .bingo-summary b { font-style: normal; font-weight: 600; }
+  .bingo-link {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em;
+    color: var(--ink-3); flex: 0 0 auto;
+  }
+
+  /* ---------- bottom row ---------- */
+  .player-grid {
+    display: grid; grid-template-columns: 200px 1fr;
+    gap: 18px; margin-top: 18px;
+  }
+  .today {
+    border: 1px solid var(--ink); background: var(--bg);
+    padding: 14px 14px 16px; text-align: center;
+    display: flex; flex-direction: column;
+    justify-content: space-between; gap: 8px;
+  }
+  .today .lbl {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2);
+  }
+  .ring-wrap { position: relative; width: 120px; height: 120px; margin: 0 auto; flex: 0 0 auto; }
+  .ring-wrap svg { width: 120px; height: 120px; transform: rotate(-90deg); }
+  .ring-wrap .center {
+    position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  }
+  .ring-wrap .center .big {
+    font-family: var(--serif); font-size: 30px; font-weight: 600;
+    line-height: 1; letter-spacing: -0.02em;
+  }
+  .ring-wrap .center .of {
+    font-family: var(--mono); font-size: 10px;
+    color: var(--ink-2); letter-spacing: 0.1em; margin-top: 4px;
+  }
+  .player.w [data-today-fill] { stroke: #a3691f; }
+  .player.m [data-today-fill] { stroke: #2c4a6e; }
+  .today .status {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2);
+  }
+  .today .status.met { color: var(--leaf); font-weight: 600; }
+
+  .week-and-recent { display: grid; grid-template-rows: auto 1fr; gap: 14px; }
+  .week { border: 1px solid var(--ink); background: var(--bg); padding: 12px 14px 14px; }
+  .week-head {
+    display: flex; justify-content: space-between;
+    align-items: baseline; margin-bottom: 10px;
+  }
+  .week-head .lbl {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2);
+  }
+  .week-head .total {
+    font-family: var(--serif); font-style: italic; font-size: 13px;
+    color: var(--ink); white-space: nowrap;
+  }
+  .week-head .total b { font-style: normal; font-weight: 600; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+  .day {
+    border: 1px solid var(--ink); background: var(--paper);
+    padding: 8px 4px 6px; text-align: center;
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; color: var(--ink-2); text-transform: uppercase;
+  }
+  .day .min {
+    display: block; font-family: var(--serif); font-size: 16px;
+    color: var(--ink); font-weight: 500; letter-spacing: 0;
+    text-transform: none; margin-top: 4px;
+  }
+  .day.today { border-width: 1.5px; box-shadow: 2px 2px 0 var(--ink); }
+  .day.zero .min { color: var(--ink-3); }
+  .day.future {
+    background: repeating-linear-gradient(45deg, var(--paper) 0 5px, var(--bg-2) 5px 10px);
+    color: var(--ink-3);
+  }
+  .day.future .min { opacity: 0; }
+  .player.w .day.met { background: color-mix(in oklch, var(--sun) 35%, var(--paper)); }
+  .player.m .day.met { background: color-mix(in oklch, var(--sea) 22%, var(--paper)); }
+
+  .recent { border: 1px solid var(--ink); background: var(--bg); padding: 12px 14px 4px; }
+  .recent .lbl {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em;
+    color: var(--ink-2); margin-bottom: 10px;
+  }
+  .session {
+    display: grid; grid-template-columns: 64px 1fr auto;
+    gap: 12px; align-items: center;
+    padding: 8px 0; border-bottom: 1px dashed var(--ink-3);
+  }
+  .session:last-child { border-bottom: none; }
+  .session .when {
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-2);
+  }
+  .session .book {
+    font-family: var(--serif); font-size: 15px;
+    line-height: 1.2; font-weight: 500; min-width: 0;
+  }
+  .session .book em { font-style: italic; }
+  .session .book .detail {
+    display: block; font-family: var(--mono); font-size: 10px;
+    font-style: normal; letter-spacing: 0.1em; color: var(--ink-2);
+    text-transform: uppercase; margin-top: 3px; font-weight: 400;
+  }
+  .session .gain {
+    font-family: var(--serif); font-size: 18px; font-weight: 600;
+    text-align: right; color: var(--ink);
+  }
+  .session .gain .plus { color: var(--ink-3); font-weight: 400; }
+  .player.w .session .gain { color: var(--sun-deep); }
+  .player.m .session .gain { color: var(--sea-deep); }
+  .recent-empty {
+    font-family: var(--mono); font-size: 11px;
+    color: var(--ink-3); text-align: center; padding: 14px 0;
+  }
+  .recent-empty code {
+    background: var(--bg-2); border: 1px solid var(--ink);
+    padding: 1px 6px; margin: 0 2px;
+  }
+
+  /* legend */
+  .legend {
+    display: flex; gap: 22px; justify-content: center;
+    margin-top: 28px; padding-top: 18px;
+    border-top: 1.5px solid var(--ink);
+    font-family: var(--mono); font-size: 10px;
+    text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2);
+  }
+  .legend .swatch {
+    display: inline-block; width: 12px; height: 12px;
+    border: 1px solid var(--ink); border-radius: 50%;
+    vertical-align: -2px; margin-right: 6px;
+  }
+  .legend code {
+    font-family: var(--mono); background: var(--bg-2);
+    padding: 1px 6px; border: 1px solid var(--ink);
+  }
+
+  body:not(.board-ready) .players,
+  body:not(.board-ready) .strips { opacity: 0.4; }
+</style>
+</head>
+<body>
+<div class="frame">
+
+  <!-- ============ top bar ============ -->
+  <div class="topbar">
+    <div class="brand-block">
+      <div class="brand-mark">SR</div>
+      <div>
+        <h1 class="title">Summer Reading <em>Quest</em></h1>
+        <div class="subtitle">Crusader Family · Board №1 · Season of 2026</div>
+      </div>
+    </div>
+    <div class="meta" id="meta">
+      <div>Day <b data-day-of-summer>22</b> of <b data-summer-total>70</b></div>
+      <div>Today · <b data-today-label>Wed, Jul 1</b></div>
+      <div>Goal · <b data-daily-goal>Daily reading</b></div>
+      <div class="live"><span class="dot"></span><span id="live-state">Live</span></div>
+      <a href="/board/library" class="nav-link" style="font-family:var(--mono); font-size:11px; text-transform:uppercase; letter-spacing:0.12em; color:var(--ink); text-decoration:none; padding:6px 12px; border:1px solid var(--ink); background:var(--paper); box-shadow:2px 2px 0 var(--ink);">Books read →</a>
+    </div>
+  </div>
+
+  <!-- ============ strips (season + family) ============ -->
+  <div class="strips">
+    <!-- summer break progress -->
+    <div class="strip">
+      <span class="label">Summer break</span>
+      <div class="season-row">
+        <span class="endcap" data-summer-start>Jun 10</span>
+        <div class="season-bar" style="flex:1;">
+          <div class="fill" data-season-fill></div>
+          <div class="marker" data-season-marker style="left:32%"></div>
+        </div>
+        <span class="endcap" data-summer-end>Aug 19</span>
+      </div>
+      <span class="label" data-days-left>48 days left</span>
+    </div>
+
+    <!-- family quest goal -->
+    <div class="strip">
+      <span class="label">Family quest</span>
+      <div class="season-row" style="position: relative;">
+        <div class="family-bar" style="flex:1;">
+          <div class="fill-w" data-family-w></div>
+          <div class="fill-m" data-family-m></div>
+        </div>
+        <span class="family-stats">
+          <b data-family-current>4,180</b> / <span data-family-target>10,000</span> pts
+        </span>
+      </div>
+      <span class="family-pct"><b data-family-pct>42%</b></span>
+    </div>
+  </div>
+
+  <!-- ============ players ============ -->
+  <div class="players">
+
+    <!-- ----- ALEX ----- -->
+    <section class="player w" data-player="alex">
+      <header class="player-header">
+        <div class="monogram" data-monogram>A</div>
+        <div class="who">
+          <div class="name" data-name>Alex</div>
+          <div class="grade">
+            <span data-grade>Age 7 · 2nd grade</span>
+            <span class="tier-chip"><span class="dot"></span><span data-tier-label>Stretch</span> · <span data-tier-ppp>1.5 pts/pg</span></span>
+          </div>
+        </div>
+        <div class="score">
+          <span class="num" data-total-pts>1,740</span>
+          <div class="lbl">points · <b data-books-finished>3</b> books</div>
+        </div>
+      </header>
+
+      <div class="quest">
+        <h3>
+          <span>Quest Track</span>
+          <span class="pts-to-go" data-pts-to-go>1,260 to <em>Medium Reward</em></span>
+        </h3>
+        <svg viewBox="0 0 600 110" preserveAspectRatio="none" data-quest-svg>
+          <path data-quest-bg-path
+                d="M 30 80 C 130 80, 130 30, 230 30 S 330 80, 430 80 S 530 30, 570 30"
+                fill="none" stroke="#1A1814" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <path data-quest-fg-path
+                d="M 30 80 C 130 80, 130 30, 230 30 S 330 80, 430 80 S 530 30, 570 30"
+                fill="none" stroke-width="3.5" stroke-linecap="round"
+                stroke-dasharray="1000" stroke-dashoffset="700"/>
+          <circle cx="30" cy="80" r="6" fill="#FFFCF4" stroke="#1A1814" stroke-width="1.5"/>
+
+          <g data-milestone="0">
+            <rect class="token" x="-12" y="-12" width="24" height="24" transform="rotate(45)"/>
+            <circle class="core" r="4"/>
+            <text class="num-label" x="0" y="32" text-anchor="middle">1,500</text>
+          </g>
+          <g data-milestone="1">
+            <polygon class="token" points="0,-14 12,-4 8,12 -8,12 -12,-4"/>
+            <circle class="core" r="4"/>
+            <text class="num-label" x="0" y="32" text-anchor="middle">3,000</text>
+          </g>
+          <g data-milestone="2">
+            <circle class="token" r="14"/>
+            <circle class="core" r="6"/>
+            <text class="num-label" x="0" y="34" text-anchor="middle">4,500</text>
+          </g>
+
+          <g data-quest-pawn>
+            <circle class="pawn-bg" r="11"/>
+            <text class="pawn-letter" x="0" y="4" text-anchor="middle">A</text>
+          </g>
+        </svg>
+
+        <div class="quest-legend">
+          <div class="stone" data-stone="0"><span data-stone-headline>1,500 pts</span><span class="pts">Small reward</span></div>
+          <div class="stone" data-stone="1"><span data-stone-headline>1,260 to go</span><span class="pts">Medium reward</span></div>
+          <div class="stone" data-stone="2"><span data-stone-headline>2,760 to go</span><span class="pts">Big reward</span></div>
+        </div>
+      </div>
+
+      <!-- bingo strip -->
+      <div class="bingo-strip">
+        <span class="lbl">Bingo</span>
+        <div class="bingo-grid" data-bingo-grid></div>
+        <span class="bingo-summary" data-bingo-summary>7 / 25 squares</span>
+        <span class="bingo-link">/bingo show w</span>
+      </div>
+
+      <div class="player-grid">
+        <div class="today">
+          <div class="lbl">Today</div>
+          <div class="ring-wrap">
+            <svg>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#E5DEC9" stroke-width="10"/>
+              <circle data-today-fill cx="60" cy="60" r="50" fill="none" stroke-width="10"
+                      stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="0"/>
+            </svg>
+            <div class="center">
+              <div>
+                <div class="big"><span data-today-mins>35</span><span style="font-size:18px; color:var(--ink-2);">p</span></div>
+                <div class="of" data-today-goal>pages</div>
+              </div>
+            </div>
+          </div>
+          <div class="status met" data-today-status>Read today ✓</div>
+        </div>
+
+        <div class="week-and-recent">
+          <div class="week">
+            <div class="week-head">
+              <div class="lbl">This week</div>
+              <div class="total" data-week-summary><b>+210</b> pts · 280 pp · 5 days</div>
+            </div>
+            <div class="days">
+              <div class="day" data-week-day><span data-day-name>Mon</span><span class="min" data-day-mins>56</span></div>
+              <div class="day" data-week-day><span data-day-name>Tue</span><span class="min" data-day-mins>64</span></div>
+              <div class="day" data-week-day><span data-day-name>Wed</span><span class="min" data-day-mins>—</span></div>
+              <div class="day" data-week-day><span data-day-name>Thu</span><span class="min" data-day-mins>48</span></div>
+              <div class="day" data-week-day><span data-day-name>Fri</span><span class="min" data-day-mins>35</span></div>
+              <div class="day" data-week-day><span data-day-name>Sat</span><span class="min" data-day-mins>42</span></div>
+              <div class="day" data-week-day><span data-day-name>Sun</span><span class="min" data-day-mins>35</span></div>
+            </div>
+          </div>
+          <div class="recent">
+            <div class="lbl">Last 3 sessions</div>
+            <div data-recent></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ----- SAM ----- -->
+    <section class="player m" data-player="sam">
+      <header class="player-header">
+        <div class="monogram" data-monogram>S</div>
+        <div class="who">
+          <div class="name" data-name>Sam</div>
+          <div class="grade">
+            <span data-grade>Age 10 · 6th grade</span>
+            <span class="tier-chip"><span class="dot"></span><span data-tier-label>Comfort</span> · <span data-tier-ppp>1.0 pts/pg</span></span>
+          </div>
+        </div>
+        <div class="score">
+          <span class="num" data-total-pts>2,440</span>
+          <div class="lbl">points · <b data-books-finished>7</b> books</div>
+        </div>
+      </header>
+
+      <div class="quest">
+        <h3>
+          <span>Quest Track</span>
+          <span class="pts-to-go" data-pts-to-go>560 to <em>Medium Reward</em></span>
+        </h3>
+        <svg viewBox="0 0 600 110" preserveAspectRatio="none" data-quest-svg>
+          <path data-quest-bg-path
+                d="M 30 80 C 130 80, 130 30, 230 30 S 330 80, 430 80 S 530 30, 570 30"
+                fill="none" stroke="#1A1814" stroke-width="1.5" stroke-dasharray="2 5"/>
+          <path data-quest-fg-path
+                d="M 30 80 C 130 80, 130 30, 230 30 S 330 80, 430 80 S 530 30, 570 30"
+                fill="none" stroke-width="3.5" stroke-linecap="round"
+                stroke-dasharray="1000" stroke-dashoffset="458"/>
+          <circle cx="30" cy="80" r="6" fill="#FFFCF4" stroke="#1A1814" stroke-width="1.5"/>
+
+          <g data-milestone="0">
+            <rect class="token" x="-12" y="-12" width="24" height="24" transform="rotate(45)"/>
+            <circle class="core" r="4"/>
+            <text class="num-label" x="0" y="32" text-anchor="middle">1,500</text>
+          </g>
+          <g data-milestone="1">
+            <polygon class="token" points="0,-14 12,-4 8,12 -8,12 -12,-4"/>
+            <circle class="core" r="4"/>
+            <text class="num-label" x="0" y="32" text-anchor="middle">3,000</text>
+          </g>
+          <g data-milestone="2">
+            <circle class="token" r="14"/>
+            <circle class="core" r="6"/>
+            <text class="num-label" x="0" y="34" text-anchor="middle">4,500</text>
+          </g>
+
+          <g data-quest-pawn>
+            <circle class="pawn-bg" r="11"/>
+            <text class="pawn-letter" x="0" y="4" text-anchor="middle">S</text>
+          </g>
+        </svg>
+
+        <div class="quest-legend">
+          <div class="stone" data-stone="0"><span data-stone-headline>1,500 pts</span><span class="pts">Small reward</span></div>
+          <div class="stone" data-stone="1"><span data-stone-headline>560 to go</span><span class="pts">Medium reward</span></div>
+          <div class="stone" data-stone="2"><span data-stone-headline>2,060 to go</span><span class="pts">Big reward</span></div>
+        </div>
+      </div>
+
+      <!-- bingo strip -->
+      <div class="bingo-strip">
+        <span class="lbl">Bingo</span>
+        <div class="bingo-grid" data-bingo-grid></div>
+        <span class="bingo-summary" data-bingo-summary><b>1 line</b> · +25 pts</span>
+        <span class="bingo-link">/bingo show m</span>
+      </div>
+
+      <div class="player-grid">
+        <div class="today">
+          <div class="lbl">Today</div>
+          <div class="ring-wrap">
+            <svg>
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#D6E1EA" stroke-width="10"/>
+              <circle data-today-fill cx="60" cy="60" r="50" fill="none" stroke-width="10"
+                      stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="0"/>
+            </svg>
+            <div class="center">
+              <div>
+                <div class="big"><span data-today-mins>48</span><span style="font-size:18px; color:var(--ink-2);">p</span></div>
+                <div class="of" data-today-goal>pages</div>
+              </div>
+            </div>
+          </div>
+          <div class="status met" data-today-status>Read today ✓</div>
+        </div>
+
+        <div class="week-and-recent">
+          <div class="week">
+            <div class="week-head">
+              <div class="lbl">This week</div>
+              <div class="total" data-week-summary><b>+460</b> pts · 380 min · 6 days</div>
+            </div>
+            <div class="days">
+              <div class="day" data-week-day><span data-day-name>Mon</span><span class="min" data-day-mins>70</span></div>
+              <div class="day" data-week-day><span data-day-name>Tue</span><span class="min" data-day-mins>65</span></div>
+              <div class="day" data-week-day><span data-day-name>Wed</span><span class="min" data-day-mins>72</span></div>
+              <div class="day" data-week-day><span data-day-name>Thu</span><span class="min" data-day-mins>45</span></div>
+              <div class="day" data-week-day><span data-day-name>Fri</span><span class="min" data-day-mins>68</span></div>
+              <div class="day" data-week-day><span data-day-name>Sat</span><span class="min" data-day-mins>0</span></div>
+              <div class="day" data-week-day><span data-day-name>Sun</span><span class="min" data-day-mins>60</span></div>
+            </div>
+          </div>
+          <div class="recent">
+            <div class="lbl">Last 3 sessions</div>
+            <div data-recent></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- legend -->
+  <div class="legend">
+    <div><span class="swatch" style="background:#9CB776"></span>Milestone cleared</div>
+    <div><span class="swatch" style="background:#F2C268"></span>Next reward</div>
+    <div><span class="swatch" style="background:#FAF6EE"></span>Locked</div>
+    <div>·</div>
+    <div>Log with <code>/read w "book" 30p 25m finished</code></div>
+  </div>
+</div>
+
+<script src="board.js"></script>
+<script>
+  (async () => {
+    await window.Board.fetchAndRender();
+    const liveState = document.getElementById('live-state');
+    const meta = document.getElementById('meta');
+    function syncMeta() {
+      if (window.__boardSource === 'mock') {
+        meta.classList.add('mock');
+        liveState.textContent = 'Mock data';
+      } else {
+        meta.classList.remove('mock');
+        liveState.textContent = 'Live';
+      }
+    }
+    syncMeta();
+    setInterval(async () => {
+      await window.Board.fetchAndRender();
+      syncMeta();
+    }, 10 * 1000);
+  })();
+</script>
+
+</body>
+</html>

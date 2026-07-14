@@ -1,0 +1,55 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "reading bot",
+      "intents": [
+        {
+          "name": "LogReadingIntent",
+          "slots": [
+            {"name": "reader",   "type": "ReaderName"},
+            {"name": "book",     "type": "AMAZON.Book"},
+            {"name": "pages",    "type": "AMAZON.NUMBER"},
+            {"name": "minutes",  "type": "AMAZON.NUMBER"}
+          ],
+          "samples": [
+            "{reader} read {pages} pages of {book}",
+            "{reader} read {pages} pages of {book} for {minutes} minutes",
+            "{reader} read {book} for {pages} pages",
+            "{reader} read {book} for {pages} pages for {minutes} minutes",
+            "log {reader} read {pages} pages of {book}",
+            "log {reader} read {pages} pages of {book} for {minutes} minutes",
+            "{reader} finished {book} with {pages} pages",
+            "add {pages} pages of {book} for {reader}",
+            "add reading for {reader} {pages} pages of {book}",
+            "{reader} read {book} {pages} pages {minutes} minutes"
+          ]
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "ReaderName",
+          "values": [
+            {"name": {"value": "alex", "synonyms": ["Will", "W"]}},
+            {"name": {"value": "sam", "synonyms": ["Mike", "M"]}}
+          ]
+        }
+      ]
+    }
+  }
+}
