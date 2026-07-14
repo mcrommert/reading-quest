@@ -99,8 +99,7 @@
     font-size: 14px; line-height: 1;
     background: var(--bg);
   }
-  .tab[data-kid="alex"] .monogram { background: var(--sun); color: var(--ink); }
-  .tab[data-kid="sam"] .monogram { background: var(--sea); color: var(--paper); }
+  .tab .monogram { background: var(--accent, var(--sun)); color: var(--accent-ink, var(--ink)); }
   .tab .count {
     font-family: var(--mono); font-size: 11px;
     color: var(--ink-3); letter-spacing: 0.1em;
@@ -139,8 +138,7 @@
     font-family: var(--mono); font-size: 10px;
     color: var(--ink-3); margin-left: 4px;
   }
-  .view.w .stat.accent .num { color: var(--sun-deep); }
-  .view.m .stat.accent .num { color: var(--sea-deep); }
+  .view .stat.accent .num { color: var(--accent-deep, var(--sun-deep)); }
 
   /* ---------- controls ---------- */
   .controls {
@@ -210,8 +208,7 @@
     font-family: var(--serif); font-size: 32px; font-weight: 600;
     letter-spacing: -0.02em; display: block;
   }
-  .view.w .book .points .num { color: var(--sun-deep); }
-  .view.m .book .points .num { color: var(--sea-deep); }
+  .view .book .points .num { color: var(--accent-deep, var(--sun-deep)); }
   .book .points .lbl {
     font-family: var(--mono); font-size: 9px;
     text-transform: uppercase; letter-spacing: 0.18em;
@@ -338,7 +335,7 @@
       <div class="brand-mark">SR</div>
       <div>
         <h1>Books <em>Read</em></h1>
-        <div class="subtitle">Every book Alex & Sam have opened this summer</div>
+        <div class="subtitle">Every book the family has opened this summer</div>
       </div>
     </div>
     <div style="display:flex; gap:14px; align-items:center;">
@@ -348,21 +345,11 @@
   </div>
 
   <!-- kid tabs -->
-  <div class="tabs" id="tabs">
-    <button class="tab active" data-kid="alex">
-      <span class="monogram">W</span>
-      Alex
-      <span class="count" data-kid-count="alex">— books</span>
-    </button>
-    <button class="tab" data-kid="sam">
-      <span class="monogram">M</span>
-      Sam
-      <span class="count" data-kid-count="sam">— books</span>
-    </button>
-  </div>
+  <div class="tabs" id="tabs"></div>
 
   <!-- per-kid views -->
-  <div class="view active w" data-view="alex">
+  <div id="views"></div>
+  <template id="view-tpl"><div class="view">
     <div class="totals">
       <div class="stat accent"><div class="lbl">Books finished</div><div class="num"><span data-stat="books_finished">—</span></div></div>
       <div class="stat"><div class="lbl">Books opened</div><div class="num"><span data-stat="books_total">—</span></div></div>
@@ -389,36 +376,7 @@
     </div>
 
     <div class="books" data-books></div>
-  </div>
-
-  <div class="view m" data-view="sam">
-    <div class="totals">
-      <div class="stat accent"><div class="lbl">Books finished</div><div class="num"><span data-stat="books_finished">—</span></div></div>
-      <div class="stat"><div class="lbl">Books opened</div><div class="num"><span data-stat="books_total">—</span></div></div>
-      <div class="stat"><div class="lbl">Total pages</div><div class="num"><span data-stat="pages">—</span></div></div>
-      <div class="stat accent"><div class="lbl">Total points</div><div class="num"><span data-stat="points">—</span></div></div>
-      <div class="stat"><div class="lbl">Sessions</div><div class="num"><span data-stat="sessions">—</span></div></div>
-    </div>
-
-    <div class="controls">
-      <span class="label">Show</span>
-      <div class="group filter">
-        <button class="chip active" data-filter="all">All</button>
-        <button class="chip" data-filter="finished">Finished</button>
-        <button class="chip" data-filter="reading">In progress</button>
-      </div>
-      <span class="label">Sort</span>
-      <div class="group sort">
-        <button class="chip active" data-sort="recent">Recent</button>
-        <button class="chip" data-sort="finished_date">Finished</button>
-        <button class="chip" data-sort="points">Points</button>
-        <button class="chip" data-sort="pages">Pages</button>
-        <button class="chip" data-sort="title">A–Z</button>
-      </div>
-    </div>
-
-    <div class="books" data-books></div>
-  </div>
+  </div></template>
 
 </div>
 
@@ -426,12 +384,27 @@
 (function () {
   'use strict';
 
+  const PALETTE = [
+    { accent: 'var(--sun)', deep: 'var(--sun-deep)', ink: 'var(--ink)' },
+    { accent: 'var(--sea)', deep: 'var(--sea-deep)', ink: 'var(--paper)' },
+    { accent: '#3aa76d', deep: '#1f6e45', ink: 'var(--paper)' },
+    { accent: '#8a63c4', deep: '#553a86', ink: 'var(--paper)' },
+    { accent: '#e07a5f', deep: '#a24a34', ink: 'var(--paper)' },
+    { accent: '#2f9bb5', deep: '#1c6577', ink: 'var(--paper)' }
+  ];
+  function applyAccentVars(el, i) {
+    const pal = PALETTE[i % PALETTE.length];
+    el.style.setProperty('--accent', pal.accent);
+    el.style.setProperty('--accent-deep', pal.deep);
+    if (pal.ink) el.style.setProperty('--accent-ink', pal.ink);
+  }
+
   // ---------- offline mock ---------------------------------------------
   const MOCK = {
     today: { iso: "2026-07-01", label: "Wed, Jul 1" },
     players: [
       {
-        key: "alex", name: "Alex", monogram: "W", age: 7, grade: "2nd grade",
+        key: "alex", name: "Alex", monogram: "A", age: 7, grade: "2nd grade",
         totals: { books_total: 11, books_finished: 3, pages: 842, minutes: 1740, points: 1740, sessions: 38 },
         books: [
           {
@@ -491,7 +464,7 @@
         ]
       },
       {
-        key: "sam", name: "Sam", monogram: "M", age: 10, grade: "6th grade",
+        key: "sam", name: "Sam", monogram: "S", age: 10, grade: "6th grade",
         totals: { books_total: 14, books_finished: 7, pages: 2240, minutes: 3120, points: 2440, sessions: 46 },
         books: [
           {
@@ -565,8 +538,8 @@
   // ---------- state ----------------------------------------------------
   const state = {
     data: null,
-    filter: { alex: 'all',    sam: 'all' },
-    sort:   { alex: 'recent', sam: 'recent' },
+    filter: {},
+    sort:   {},
   };
 
   // ---------- helpers --------------------------------------------------
@@ -707,8 +680,58 @@
     }
   }
 
+  function buildScaffold(players) {
+    const tabs = document.getElementById('tabs');
+    const views = document.getElementById('views');
+    const tpl = document.getElementById('view-tpl');
+    tabs.innerHTML = '';
+    views.innerHTML = '';
+    players.forEach((p, i) => {
+      if (state.filter[p.key] == null) state.filter[p.key] = 'all';
+      if (state.sort[p.key] == null)   state.sort[p.key]   = 'recent';
+
+      const btn = document.createElement('button');
+      btn.className = 'tab' + (i === 0 ? ' active' : '');
+      btn.setAttribute('data-kid', p.key);
+      applyAccentVars(btn, i);
+      btn.innerHTML = '<span class="monogram">' + escapeHtml(p.monogram || p.name.charAt(0)) +
+        '</span> ' + escapeHtml(p.name) +
+        ' <span class="count" data-kid-count="' + p.key + '">— books</span>';
+      tabs.appendChild(btn);
+
+      const view = tpl.content.firstElementChild.cloneNode(true);
+      view.setAttribute('data-view', p.key);
+      if (i === 0) view.classList.add('active');
+      applyAccentVars(view, i);
+      views.appendChild(view);
+
+      const kid = p.key;
+      view.querySelectorAll('.group.filter .chip').forEach(c => {
+        c.addEventListener('click', () => {
+          view.querySelectorAll('.group.filter .chip').forEach(b => b.classList.remove('active'));
+          c.classList.add('active');
+          state.filter[kid] = c.getAttribute('data-filter');
+          const pl = state.data && state.data.players.find(x => x.key === kid);
+          if (pl) renderPlayer(pl);
+        });
+      });
+      view.querySelectorAll('.group.sort .chip').forEach(c => {
+        c.addEventListener('click', () => {
+          view.querySelectorAll('.group.sort .chip').forEach(b => b.classList.remove('active'));
+          c.classList.add('active');
+          state.sort[kid] = c.getAttribute('data-sort');
+          const pl = state.data && state.data.players.find(x => x.key === kid);
+          if (pl) renderPlayer(pl);
+        });
+      });
+    });
+    state.builtKeys = players.map(p => p.key).join(',');
+  }
+
   function render() {
     if (!state.data) return;
+    const keys = state.data.players.map(p => p.key).join(',');
+    if (state.builtKeys !== keys) buildScaffold(state.data.players);
     state.data.players.forEach(renderPlayer);
     document.body.classList.add('lib-ready');
   }
@@ -724,27 +747,6 @@
     document.querySelector(`[data-view="${kid}"]`).classList.add('active');
   });
 
-  document.querySelectorAll('.view').forEach(view => {
-    const kid = view.getAttribute('data-view');
-    view.querySelectorAll('.group.filter .chip').forEach(c => {
-      c.addEventListener('click', () => {
-        view.querySelectorAll('.group.filter .chip').forEach(b => b.classList.remove('active'));
-        c.classList.add('active');
-        state.filter[kid] = c.getAttribute('data-filter');
-        const p = state.data && state.data.players.find(p => p.key === kid);
-        if (p) renderPlayer(p);
-      });
-    });
-    view.querySelectorAll('.group.sort .chip').forEach(c => {
-      c.addEventListener('click', () => {
-        view.querySelectorAll('.group.sort .chip').forEach(b => b.classList.remove('active'));
-        c.classList.add('active');
-        state.sort[kid] = c.getAttribute('data-sort');
-        const p = state.data && state.data.players.find(p => p.key === kid);
-        if (p) renderPlayer(p);
-      });
-    });
-  });
 
   // ---------- fetch + render ------------------------------------------
   let __lastHash = null;

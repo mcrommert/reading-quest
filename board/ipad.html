@@ -150,15 +150,7 @@
     background: var(--bg-2); border: 1px solid var(--ink);
     border-radius: 999px; overflow: hidden;
   }
-  .family-bar .fill-w, .family-bar .fill-m { position: absolute; top: 0; bottom: 0; }
-  .family-bar .fill-w {
-    left: 0; width: 17%;
-    background: repeating-linear-gradient(45deg, var(--sun) 0 5px, var(--sun-deep) 5px 10px);
-  }
-  .family-bar .fill-m {
-    left: 17%; width: 24%;
-    background: repeating-linear-gradient(45deg, var(--sea) 0 5px, var(--sea-deep) 5px 10px);
-  }
+  .family-bar .fill-seg { position: absolute; top: 0; bottom: 0; }
   .family-stats {
     font-family: var(--serif); font-size: 14px;
     font-style: italic; color: var(--ink); white-space: nowrap;
@@ -168,7 +160,7 @@
 
   /* ---------- players ---------- */
   .players {
-    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; min-height: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 18px; min-height: 0;
   }
   .player {
     border: 1.5px solid var(--ink); background: var(--paper);
@@ -176,8 +168,7 @@
     display: grid; grid-template-rows: auto auto auto 1fr;
     gap: 10px; min-height: 0;
   }
-  .player.w { background: linear-gradient(180deg, #FFF7E0 0%, var(--paper) 35%); }
-  .player.m { background: linear-gradient(180deg, #E6F0F7 0%, var(--paper) 35%); }
+  .player { background: linear-gradient(180deg, var(--accent-grad, #FFF7E0) 0%, var(--paper) 35%); }
 
   .player-header {
     display: grid; grid-template-columns: auto 1fr auto;
@@ -190,8 +181,7 @@
     display: grid; place-items: center;
     font-family: var(--serif); font-size: 30px; font-weight: 600; line-height: 1;
   }
-  .player.w .monogram { background: var(--sun); }
-  .player.m .monogram { background: var(--sea); color: var(--paper); }
+  .player .monogram { background: var(--accent, var(--sun)); color: var(--accent-ink, inherit); }
 
   .who .name {
     font-family: var(--serif); font-size: 28px; font-weight: 600;
@@ -211,8 +201,7 @@
     display:inline-block; width:7px; height:7px; border-radius:50%;
     vertical-align: 1px; margin-right: 5px; background: var(--ink);
   }
-  .player.w .tier-chip .dot { background: var(--sun-deep); }
-  .player.m .tier-chip .dot { background: var(--sea); }
+  .player .tier-chip .dot { background: var(--accent-deep, var(--sun-deep)); }
 
   .score { text-align: right; line-height: 1; }
   .score .num {
@@ -225,8 +214,7 @@
     color: var(--ink-2); margin-top: 4px; white-space: nowrap;
   }
   .score .lbl b { color: var(--ink); font-weight: 600; }
-  .player.w .score .num { color: var(--sun-deep); }
-  .player.m .score .num { color: var(--sea-deep); }
+  .player .score .num { color: var(--accent-deep, var(--sun-deep)); }
 
   /* quest track */
   .quest h3 {
@@ -262,8 +250,7 @@
     font-family: 'Newsreader', serif; font-size: 12px;
     font-style: italic; font-weight: 600; fill: var(--ink);
   }
-  .player.w [data-quest-fg-path] { stroke: #a3691f; }
-  .player.m [data-quest-fg-path] { stroke: #2c4a6e; }
+  .player [data-quest-fg-path] { stroke: var(--accent-stroke, #a3691f); }
 
   .quest-legend {
     display: grid; grid-template-columns: 1fr 1fr 1fr;
@@ -313,8 +300,7 @@
     border: 1px solid var(--ink); background: var(--paper);
   }
   .bingo-cell.free { background: var(--ink); }
-  .player.w .bingo-cell.checked { background: var(--sun); }
-  .player.m .bingo-cell.checked { background: var(--sea); }
+  .player .bingo-cell.checked { background: var(--accent, var(--sun)); }
   .bingo-cell.line {
     background: var(--leaf-soft) !important;
     border-width: 1.5px;
@@ -360,8 +346,7 @@
     font-family: var(--mono); font-size: 9px;
     color: var(--ink-2); letter-spacing: 0.12em; margin-top: 3px;
   }
-  .player.w [data-today-fill] { stroke: #a3691f; }
-  .player.m [data-today-fill] { stroke: #2c4a6e; }
+  .player [data-today-fill] { stroke: var(--accent-stroke, #a3691f); }
   .today .status {
     font-family: var(--mono); font-size: 10px;
     text-transform: uppercase; letter-spacing: 0.16em; color: var(--ink-2);
@@ -404,8 +389,7 @@
     color: var(--ink-3);
   }
   .day.future .min { opacity: 0; }
-  .player.w .day.met { background: color-mix(in oklch, var(--sun) 35%, var(--paper)); }
-  .player.m .day.met { background: color-mix(in oklch, var(--sea) 22%, var(--paper)); }
+  .player .day.met { background: color-mix(in oklch, var(--accent, var(--sun)) 32%, var(--paper)); }
 
   .recent {
     border: 1px solid var(--ink); background: var(--bg);
@@ -446,8 +430,7 @@
     font-weight: 600; text-align: right;
   }
   .session .gain .plus { color: var(--ink-3); font-weight: 400; }
-  .player.w .session .gain { color: var(--sun-deep); }
-  .player.m .session .gain { color: var(--sea-deep); }
+  .player .session .gain { color: var(--accent-deep, var(--sun-deep)); }
   .recent-empty {
     font-family: var(--mono); font-size: 10px; color: var(--ink-3);
     text-align: center; padding: 14px 0;
@@ -518,7 +501,7 @@
         <div class="brand-mark">SR</div>
         <div>
           <h1 class="title">Summer Reading <em>Quest</em></h1>
-          <div class="subtitle">Crusader Family · Board №1 · Season of 2026</div>
+          <div class="subtitle">Reading Family · Board №1 · Season of 2026</div>
         </div>
       </div>
       <div class="topbar-meta">
@@ -552,8 +535,7 @@
         <span class="label">Family quest</span>
         <div class="season-row">
           <div class="family-bar" style="flex:1;">
-            <div class="fill-w" data-family-w></div>
-            <div class="fill-m" data-family-m></div>
+            <div data-family-splits style="position:absolute; inset:0;"></div>
           </div>
           <span class="family-stats">
             <b data-family-current>4,180</b> / <span data-family-target>10,000</span> pts
@@ -566,10 +548,9 @@
     <!-- row 3: players -->
     <div class="players">
 
-      <!-- ============ ALEX ============ -->
-      <section class="player w" data-player="alex">
+      <template id="player-tpl"><section class="player">
         <header class="player-header">
-          <div class="monogram" data-monogram>W</div>
+          <div class="monogram" data-monogram>A</div>
           <div class="who">
             <div class="name" data-name>Alex</div>
             <div class="grade">
@@ -616,7 +597,7 @@
 
             <g data-quest-pawn>
               <circle class="pawn-bg" r="10"/>
-              <text class="pawn-letter" x="0" y="4" text-anchor="middle">W</text>
+              <text class="pawn-letter" x="0" y="4" text-anchor="middle">A</text>
             </g>
           </svg>
           <div class="quest-legend">
@@ -630,7 +611,7 @@
           <span class="lbl">Bingo</span>
           <div class="bingo-grid" data-bingo-grid></div>
           <span class="bingo-summary" data-bingo-summary>7 / 25 squares</span>
-          <span class="bingo-link">/bingo show w</span>
+          <span class="bingo-link" data-bingo-link>/bingo show alex</span>
         </div>
 
         <div class="player-grid">
@@ -674,117 +655,7 @@
             </div>
           </div>
         </div>
-      </section>
-
-      <!-- ============ SAM ============ -->
-      <section class="player m" data-player="sam">
-        <header class="player-header">
-          <div class="monogram" data-monogram>M</div>
-          <div class="who">
-            <div class="name" data-name>Sam</div>
-            <div class="grade">
-              <span data-grade>Age 10 · 6th grade</span>
-              <span class="tier-chip"><span class="dot"></span><span data-tier-label>Avg</span> · <span data-tier-ppp>1.1 pts/pg</span></span>
-            </div>
-          </div>
-          <div class="score">
-            <span class="num" data-total-pts>2,440</span>
-            <div class="lbl">points · <b data-books-finished>7</b> books</div>
-          </div>
-        </header>
-
-        <div class="quest">
-          <h3>
-            <span>Quest Track</span>
-            <span class="pts-to-go" data-pts-to-go>560 to <em>Medium Reward</em></span>
-          </h3>
-          <svg viewBox="0 0 600 80" preserveAspectRatio="none" data-quest-svg>
-            <path data-quest-bg-path
-                  d="M 30 62 C 130 62, 130 18, 230 18 S 330 62, 430 62 S 530 18, 570 18"
-                  fill="none" stroke="#1A1814" stroke-width="1.5" stroke-dasharray="2 5"/>
-            <path data-quest-fg-path
-                  d="M 30 62 C 130 62, 130 18, 230 18 S 330 62, 430 62 S 530 18, 570 18"
-                  fill="none" stroke-width="3.5" stroke-linecap="round"
-                  stroke-dasharray="1000" stroke-dashoffset="458"/>
-            <circle cx="30" cy="62" r="6" fill="#FFFCF4" stroke="#1A1814" stroke-width="1.5"/>
-
-            <g data-milestone="0">
-              <rect class="token" x="-11" y="-11" width="22" height="22" transform="rotate(45)"/>
-              <circle class="core" r="4"/>
-              <text class="num-label" x="0" y="28" text-anchor="middle">1,500</text>
-            </g>
-            <g data-milestone="1">
-              <polygon class="token" points="0,-12 10,-3 7,11 -7,11 -10,-3"/>
-              <circle class="core" r="4"/>
-              <text class="num-label" x="0" y="26" text-anchor="middle">3,000</text>
-            </g>
-            <g data-milestone="2">
-              <circle class="token" r="12"/>
-              <circle class="core" r="5"/>
-              <text class="num-label" x="0" y="28" text-anchor="middle">4,500</text>
-            </g>
-
-            <g data-quest-pawn>
-              <circle class="pawn-bg" r="10"/>
-              <text class="pawn-letter" x="0" y="4" text-anchor="middle">M</text>
-            </g>
-          </svg>
-          <div class="quest-legend">
-            <div class="stone" data-stone="0"><span data-stone-headline>1,500 pts</span><span class="pts">Small reward</span></div>
-            <div class="stone" data-stone="1"><span data-stone-headline>560 to go</span><span class="pts">Medium reward</span></div>
-            <div class="stone" data-stone="2"><span data-stone-headline>2,060 to go</span><span class="pts">Big reward</span></div>
-          </div>
-        </div>
-
-        <div class="bingo-strip">
-          <span class="lbl">Bingo</span>
-          <div class="bingo-grid" data-bingo-grid></div>
-          <span class="bingo-summary" data-bingo-summary><b>1 line</b> · +25 pts</span>
-          <span class="bingo-link">/bingo show m</span>
-        </div>
-
-        <div class="player-grid">
-          <div class="today">
-            <div class="lbl">Today</div>
-            <div class="ring-wrap">
-              <svg>
-                <circle cx="50" cy="50" r="42" fill="none" stroke="#D6E1EA" stroke-width="8"/>
-                <circle data-today-fill cx="50" cy="50" r="42" fill="none" stroke-width="8"
-                        stroke-linecap="round" stroke-dasharray="264" stroke-dashoffset="0"/>
-              </svg>
-              <div class="center">
-                <div>
-                  <div class="big"><span data-today-mins>48</span><span style="font-size:14px; color:var(--ink-2);">p</span></div>
-                  <div class="of" data-today-goal>pages</div>
-                </div>
-              </div>
-            </div>
-            <div class="status met" data-today-status>Read today ✓</div>
-          </div>
-
-          <div class="week-and-recent">
-            <div class="week">
-              <div class="week-head">
-                <div class="lbl">This week</div>
-                <div class="total" data-week-summary><b>+460</b> pts · 412 pp · 6 days</div>
-              </div>
-              <div class="days">
-                <div class="day" data-week-day><span data-day-name>Mon</span><span class="min" data-day-mins>70</span></div>
-                <div class="day" data-week-day><span data-day-name>Tue</span><span class="min" data-day-mins>65</span></div>
-                <div class="day" data-week-day><span data-day-name>Wed</span><span class="min" data-day-mins>72</span></div>
-                <div class="day" data-week-day><span data-day-name>Thu</span><span class="min" data-day-mins>45</span></div>
-                <div class="day" data-week-day><span data-day-name>Fri</span><span class="min" data-day-mins>68</span></div>
-                <div class="day" data-week-day><span data-day-name>Sat</span><span class="min" data-day-mins>—</span></div>
-                <div class="day" data-week-day><span data-day-name>Sun</span><span class="min" data-day-mins>48</span></div>
-              </div>
-            </div>
-            <div class="recent">
-              <div class="lbl">Last 3 sessions</div>
-              <div data-recent></div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </section></template>
     </div>
 
   </div>

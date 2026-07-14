@@ -12,3 +12,6 @@ data/
 # google calendar service-account key
 gcal-credentials.json
 *credentials*.json
+
+# local virtualenv (dev/test only)
+.venv/

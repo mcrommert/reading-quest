@@ -123,6 +123,27 @@
 
   const MILESTONE_REWARD_LABELS = ['Small reward', 'Medium reward', 'Big reward'];
 
+  // Per-reader accent palette, assigned by index. First two match the
+  // original two-reader board (amber / blue); the rest extend it for more.
+  const PALETTE = [
+    { accent: 'var(--sun)', deep: 'var(--sun-deep)', stroke: '#a3691f', grad: '#FFF7E0', ink: '' },
+    { accent: 'var(--sea)', deep: 'var(--sea-deep)', stroke: '#2c4a6e', grad: '#E6F0F7', ink: 'var(--paper)' },
+    { accent: '#3aa76d', deep: '#1f6e45', stroke: '#1f6e45', grad: '#E6F4EC', ink: 'var(--paper)' },
+    { accent: '#8a63c4', deep: '#553a86', stroke: '#553a86', grad: '#F1E9F8', ink: 'var(--paper)' },
+    { accent: '#e07a5f', deep: '#a24a34', stroke: '#a24a34', grad: '#FBEAE4', ink: 'var(--paper)' },
+    { accent: '#2f9bb5', deep: '#1c6577', stroke: '#1c6577', grad: '#E4F2F6', ink: 'var(--paper)' }
+  ];
+  const familyStripe = (pal) =>
+    `repeating-linear-gradient(45deg, ${pal.accent} 0 5px, ${pal.deep} 5px 10px)`;
+  function applyAccent(el, i) {
+    const pal = PALETTE[i % PALETTE.length];
+    el.style.setProperty('--accent', pal.accent);
+    el.style.setProperty('--accent-deep', pal.deep);
+    el.style.setProperty('--accent-stroke', pal.stroke);
+    el.style.setProperty('--accent-grad', pal.grad);
+    if (pal.ink) el.style.setProperty('--accent-ink', pal.ink);
+  }
+
   // ----- helpers ---------------------------------------------------------
   const fmt   = (n) => Number(n).toLocaleString();
   const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
@@ -156,15 +177,22 @@
       const fgFill = root.querySelector('[data-family-fill]');
       if (fgFill) fgFill.style.width = (pct * 100).toFixed(1) + '%';
 
-      // W/M split inside the fill
-      const wSplit = root.querySelector('[data-family-w]');
-      const mSplit = root.querySelector('[data-family-m]');
-      const wPct = clamp(d.family_goal.alex / d.family_goal.target, 0, 1);
-      const mPct = clamp(d.family_goal.sam / d.family_goal.target, 0, 1);
-      if (wSplit) wSplit.style.width = (wPct * 100).toFixed(1) + '%';
-      if (mSplit) {
-        mSplit.style.left  = (wPct * 100).toFixed(1) + '%';
-        mSplit.style.width = (mPct * 100).toFixed(1) + '%';
+      // per-reader split segments inside the fill
+      const splits = root.querySelector('[data-family-splits]');
+      if (splits) {
+        splits.innerHTML = '';
+        let acc = 0;
+        (d.players || []).forEach((p, i) => {
+          const val = Number(d.family_goal[p.key] || 0);
+          const w = clamp(val / d.family_goal.target, 0, 1);
+          const seg = document.createElement('div');
+          seg.className = 'fill-seg';
+          seg.style.left = (acc * 100).toFixed(1) + '%';
+          seg.style.width = (w * 100).toFixed(1) + '%';
+          seg.style.background = familyStripe(PALETTE[i % PALETTE.length]);
+          splits.appendChild(seg);
+          acc += w;
+        });
       }
 
       setText(root, '[data-family-current]', fmt(Math.round(d.family_goal.current)));
@@ -382,17 +410,28 @@
   function render(data) {
     const milestonePts = (data.milestones || []).map(m => m.pts);
     renderHeader(data);
-    (data.players || []).forEach(p => {
-      const root = document.querySelector(`[data-player="${p.key}"]`);
-      if (!root) return;
-      renderPlayerHeader(root, p);
-      renderQuestTrack(root, p, milestonePts);
-      renderQuestLegend(root, p, milestonePts);
-      renderToday(root, p);
-      renderWeek(root, p);
-      renderBingo(root, p);
-      renderRecent(root, p);
-    });
+    const container = document.querySelector('.players');
+    const tpl = document.getElementById('player-tpl');
+    if (container && tpl) {
+      container.querySelectorAll('.player').forEach(n => n.remove());
+      (data.players || []).forEach((p, i) => {
+        const root = tpl.content.firstElementChild.cloneNode(true);
+        root.setAttribute('data-player', p.key);
+        applyAccent(root, i);
+        const link = root.querySelector('[data-bingo-link]');
+        if (link) link.textContent = '/bingo show ' + p.key;
+        const pawn = root.querySelector('.pawn-letter');
+        if (pawn) pawn.textContent = p.monogram;
+        container.appendChild(root);
+        renderPlayerHeader(root, p);
+        renderQuestTrack(root, p, milestonePts);
+        renderQuestLegend(root, p, milestonePts);
+        renderToday(root, p);
+        renderWeek(root, p);
+        renderBingo(root, p);
+        renderRecent(root, p);
+      });
+    }
     document.body.classList.add('board-ready');
     window.__boardRenderedAt = Date.now();
   }
