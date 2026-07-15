@@ -9,6 +9,19 @@ Calendar sync.
 It started as a two-kid household project and is built so **adding a reader is
 a config edit, not a code change** — see [`reader_config_example.py`](reader_config_example.py).
 
+## Screenshots
+
+The live **game board** — per-reader progress, a quest track toward rewards, a
+bingo card, weekly activity, and the shared family goal (shown here with three
+sample readers):
+
+![Game board](docs/board.png)
+
+The **reading library** — every book each reader has opened, with Lexile,
+format, tier, points, and pages:
+
+![Reading library](docs/library.png)
+
 ## How scoring works
 
 Every book has a Lexile measure. Each reader is assigned a **level** — a ladder
