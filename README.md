@@ -22,6 +22,13 @@ format, tier, points, and pages:
 
 ![Reading library](docs/library.png)
 
+**Logging** from a phone or tablet at `/log` — pick a reader, search the
+catalog (or add a new book), and it scores the session instantly. No Mattermost
+required:
+
+<img src="docs/log.png" alt="Mobile logging page" width="360">
+
+
 ## How scoring works
 
 Every book has a Lexile measure. Each reader is assigned a **level** — a ladder
