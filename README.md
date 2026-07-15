@@ -29,10 +29,18 @@ cd reading-bot
 cp reader_config_example.py reader_config.py   # then edit for your family
 cp .env.example .env                            # optional integrations
 cp docker-compose.example.yml docker-compose.yml
-docker compose up -d
+docker compose up -d --build
 ```
 
-Open **http://localhost:8602/board/** for the board. Without Docker:
+Open **http://localhost:8602/board/** for the board.
+
+The image is built from the [`Dockerfile`](Dockerfile) (Python 3.12 + the app). Your
+`reader_config.py` is **gitignored and not baked into the image** — mount it at
+run time by uncommenting the `reader_config.py` volume in the compose file, so
+your family's data stays out of the image. The SQLite database lives in the
+`./data` volume and persists across rebuilds.
+
+Without Docker:
 
 ```bash
 pip install -r requirements.txt

@@ -1,0 +1,22 @@
+# keep the build context small and never bake private data into the image
+.git
+.gitignore
+.venv
+__pycache__
+*.pyc
+*.pyo
+
+# your real family + runtime data (mount these at run time instead)
+reader_config.py
+reading.db
+*.db
+data/
+.env
+
+# docs / dev-only
+*.md
+docker-compose*.yml
+Dockerfile
+.dockerignore
+gcal-credentials.json
+*credentials*.json

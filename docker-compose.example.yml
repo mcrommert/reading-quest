@@ -1,17 +1,19 @@
 # Copy to docker-compose.yml and adjust the port / paths if you like.
-#   docker compose up -d
+#   docker compose up -d --build
 services:
   reading-bot:
-    image: python:3.12-slim
-    working_dir: /app
-    command: >
-      bash -c "pip install -q --no-cache-dir -r /app/requirements.txt &&
-               uvicorn app:app --host 0.0.0.0 --port 8602"
+    build: .
+    image: reading-bot:latest
     ports:
       - "8602:8602"
     volumes:
-      - ./:/app          # the code
-      - ./data:/data     # persists reading.db across restarts
+      - ./data:/data     # persists reading.db across rebuilds
+      # Your real family config (gitignored). Create reader_config.py from
+      # reader_config_example.py, then uncomment to use it instead of the
+      # sample readers baked into the image:
+      # - ./reader_config.py:/app/reader_config.py:ro
+      # Optional Google Calendar service-account key:
+      # - ./gcal-credentials.json:/data/gcal-credentials.json:ro
     env_file:
       - .env
     restart: unless-stopped
