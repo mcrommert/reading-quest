@@ -1,17 +1,19 @@
 # Copy to docker-compose.yml and adjust the port / paths if you like.
-#   docker compose up -d --build
+#   docker compose up -d
 services:
   reading-bot:
-    build: .
-    image: reading-bot:latest
+    # Pull the published multi-arch image (amd64 + arm64) — no build needed.
+    image: ghcr.io/mcrommert/reading-quest:latest
+    # To build from source instead, comment the image line above, uncomment
+    # the next line, and run `docker compose up -d --build`:
+    # build: .
     ports:
       - "8602:8602"
     volumes:
-      - ./data:/data     # persists reading.db across rebuilds
+      - ./data:/data     # persists reading.db across restarts + image updates
       # Your real family config (gitignored). Create reader_config.py from
-      # reader_config_example.py, then uncomment to use it instead of the
-      # sample readers baked into the image:
-      # - ./reader_config.py:/app/reader_config.py:ro
+      # reader_config_example.py; without this mount the sample readers are used:
+      - ./reader_config.py:/app/reader_config.py:ro
       # Optional Google Calendar service-account key:
       # - ./gcal-credentials.json:/data/gcal-credentials.json:ro
     env_file:

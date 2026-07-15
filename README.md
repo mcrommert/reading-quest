@@ -24,21 +24,24 @@ one, and you can tune the boundaries or add your own.
 ## Quick start
 
 ```bash
-git clone <this repo>
-cd reading-bot
+git clone https://github.com/mcrommert/reading-quest.git
+cd reading-quest
 cp reader_config_example.py reader_config.py   # then edit for your family
 cp .env.example .env                            # optional integrations
 cp docker-compose.example.yml docker-compose.yml
-docker compose up -d --build
+docker compose up -d
 ```
 
 Open **http://localhost:8602/board/** for the board.
 
-The image is built from the [`Dockerfile`](Dockerfile) (Python 3.12 + the app). Your
-`reader_config.py` is **gitignored and not baked into the image** — mount it at
-run time by uncommenting the `reader_config.py` volume in the compose file, so
-your family's data stays out of the image. The SQLite database lives in the
-`./data` volume and persists across rebuilds.
+By default this **pulls the published image** `ghcr.io/mcrommert/reading-quest:latest`
+(built for `amd64` and `arm64`) — no local build needed. To build from source
+instead, uncomment `build: .` in the compose file and run `docker compose up -d --build`.
+
+Your `reader_config.py` is **gitignored and never baked into the image** — it's
+mounted at run time (uncomment the `reader_config.py` volume in the compose file),
+so your family's data stays out of the image. The SQLite database lives in the
+`./data` volume and persists across restarts and image updates.
 
 Without Docker:
 
