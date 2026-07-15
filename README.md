@@ -23,27 +23,55 @@ one, and you can tune the boundaries or add your own.
 
 ## Quick start
 
+No clone or build needed — the published image (`amd64` + `arm64`) already
+contains the app, the board UI, and the full book catalog. Just create a
+`docker-compose.yml`:
+
+```yaml
+services:
+  reading-bot:
+    image: ghcr.io/mcrommert/reading-quest:latest
+    ports:
+      - "8602:8602"
+    volumes:
+      - ./data:/data     # persists reading.db across restarts + image updates
+    restart: unless-stopped
+```
+
+then:
+
 ```bash
-git clone https://github.com/mcrommert/reading-quest.git
-cd reading-quest
-cp reader_config_example.py reader_config.py   # then edit for your family
-cp .env.example .env                            # optional integrations
-cp docker-compose.example.yml docker-compose.yml
 docker compose up -d
 ```
 
-Open **http://localhost:8602/board/** for the board.
+Open **http://localhost:8602/board/** — it runs with two sample readers out of
+the box.
 
-By default this **pulls the published image** `ghcr.io/mcrommert/reading-quest:latest`
-(built for `amd64` and `arm64`) — no local build needed. To build from source
-instead, uncomment `build: .` in the compose file and run `docker compose up -d --build`.
+### Use your own family
 
-Your `reader_config.py` is **gitignored and never baked into the image** — it's
-mounted at run time (uncomment the `reader_config.py` volume in the compose file),
-so your family's data stays out of the image. The SQLite database lives in the
-`./data` volume and persists across restarts and image updates.
+Create a `reader_config.py` next to the compose file (schema in the next
+section), then mount it — your data stays on your machine, never in the image:
 
-Without Docker:
+```yaml
+    volumes:
+      - ./data:/data
+      - ./reader_config.py:/app/reader_config.py:ro
+```
+
+`reader_config.py` is gitignored and never baked into any image.
+
+### Build from source instead
+
+Prefer to hack on it?
+
+```bash
+git clone https://github.com/mcrommert/reading-quest.git
+cd reading-quest
+cp docker-compose.example.yml docker-compose.yml   # then uncomment `build: .`
+docker compose up -d --build
+```
+
+Or without Docker:
 
 ```bash
 pip install -r requirements.txt

@@ -1,5 +1,5 @@
-# Copy to docker-compose.yml and adjust the port / paths if you like.
-#   docker compose up -d
+# Save as docker-compose.yml and run:  docker compose up -d
+# Runs with the sample readers out of the box — no other files required.
 services:
   reading-bot:
     # Pull the published multi-arch image (amd64 + arm64) — no build needed.
@@ -11,11 +11,11 @@ services:
       - "8602:8602"
     volumes:
       - ./data:/data     # persists reading.db across restarts + image updates
-      # Your real family config (gitignored). Create reader_config.py from
-      # reader_config_example.py; without this mount the sample readers are used:
-      - ./reader_config.py:/app/reader_config.py:ro
+      # Use your own family: create reader_config.py (see README), then uncomment:
+      # - ./reader_config.py:/app/reader_config.py:ro
       # Optional Google Calendar service-account key:
       # - ./gcal-credentials.json:/data/gcal-credentials.json:ro
     env_file:
-      - .env
+      - path: .env     # optional integrations; fine if this file doesn't exist
+        required: false
     restart: unless-stopped
