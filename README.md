@@ -92,9 +92,6 @@ external integrations. Data persists in a SQLite file at `DB_PATH`
 
 ## Known limitations
 
-- The board HTML ([`board/index.html`](board/index.html)) has one hand-built
-  section per reader; adding a third reader currently needs an HTML edit even
-  though the backend is fully config-driven. See [`ROADMAP.md`](ROADMAP.md).
 - The bundled book catalog ([`books.json`](books.json)) is one family's list —
   useful as a starting point; add your own with `/book`.
 
