@@ -114,18 +114,29 @@ hand-authored bingo card get one generated from a default template.
 
 | Path | Purpose |
 |---|---|
+| `/log` | **Log reading from the browser** — mobile-friendly form + command bar |
 | `/board/` | Desktop game board |
 | `/board/ipad` | iPad kiosk view |
 | `/library/` | Books-read library |
 | `/board.json`, `/library.json` | Raw data |
-| `/slash/read`, `/slash/reading`, `/slash/book`, `/slash/bingo` | Mattermost slash commands |
-| `/alexa` | Alexa skill endpoint (set `ALEXA_SKILL_ID`) |
+| `/slash/read`, `/slash/reading`, `/slash/book`, `/slash/bingo` | Mattermost slash commands (optional) |
+| `/alexa` | Alexa skill endpoint (optional, set `ALEXA_SKILL_ID`) |
 
-Log a session from Mattermost:
+## Logging reading
+
+Open **http://localhost:8602/log** on a phone or the kitchen tablet. Pick a
+reader, search the catalog (or add a new book), enter pages, and submit — it
+scores the session instantly and updates the board. A command bar accepts the
+same shorthand for power users:
 
 ```
-/read alex "Frog and Toad Are Friends" pages=30
+alex "Frog and Toad Are Friends" pages=30 finished
 ```
+
+Mattermost slash commands and the Alexa skill are **optional** extra input
+paths — everything works from the browser with nothing else installed. Set
+`LOG_PIN` to require a PIN before logging (recommended if the app is reachable
+from outside your home network).
 
 ## Configuration
 

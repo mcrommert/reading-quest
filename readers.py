@@ -106,8 +106,12 @@ def get_reader(reader_key):
     return READERS_BY_KEY.get((reader_key or "").lower())
 
 
+def level_for(reader_key):
+    """Return a reader's configured level name (falls back to DEFAULT_LEVEL)."""
+    r = READERS_BY_KEY.get((reader_key or "").lower())
+    return (r or {}).get("level", DEFAULT_LEVEL)
+
+
 def tier_table_for(reader_key):
     """Return the Lexile tier ladder for a reader (falls back to DEFAULT_LEVEL)."""
-    r = READERS_BY_KEY.get((reader_key or "").lower())
-    level = (r or {}).get("level", DEFAULT_LEVEL)
-    return LEVELS.get(level, LEVELS[DEFAULT_LEVEL])
+    return LEVELS.get(level_for(reader_key), LEVELS[DEFAULT_LEVEL])

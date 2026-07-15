@@ -3,7 +3,7 @@
 # Reader reading-levels (Lexile tier ladders) live in readers.py so adding a
 # reader is a config edit. get_tier() resolves a reader's ladder from there;
 # "developing" / "capable" reproduce the old ALEX_TIERS / SAM_TIERS.
-from readers import tier_table_for
+from readers import tier_table_for, level_for, DEFAULT_LEVEL
 
 CLASSIC_BONUS = {
     "masterpiece":    0.50,
@@ -19,12 +19,20 @@ TIER_LABELS = {
     "big_stretch": "big stretch",
 }
 
-# Special format overrides — bypass tier+bonus+density entirely
+# Special format overrides — bypass tier+bonus+density entirely.
+# Keyed by reading LEVEL (not reader) so any number of readers works: a reader
+# gets the value for their configured level. Illustrated formats are worth more
+# to younger/lower-level readers and taper to ~nothing for advanced ones.
+# (developing / capable reproduce the original two-reader values exactly.)
 SPECIAL_OVERRIDES = {
-    "graphic_novel":            {"alex": 0.20, "sam": 0.05},
-    "graphic_novel_telgemeier": {"alex": 0.25, "sam": 0.05},
-    "easy_reader":              {"alex": 0.50, "sam": 0.05},
-    "picture_book":             {"alex": 0.25, "sam": 0.05},
+    "graphic_novel":            {"emerging": 0.25, "beginning": 0.22, "developing": 0.20,
+                                 "growing": 0.12, "fluent": 0.08, "capable": 0.05, "advanced": 0.05},
+    "graphic_novel_telgemeier": {"emerging": 0.30, "beginning": 0.28, "developing": 0.25,
+                                 "growing": 0.15, "fluent": 0.08, "capable": 0.05, "advanced": 0.05},
+    "easy_reader":              {"emerging": 0.60, "beginning": 0.55, "developing": 0.50,
+                                 "growing": 0.25, "fluent": 0.10, "capable": 0.05, "advanced": 0.05},
+    "picture_book":             {"emerging": 0.30, "beginning": 0.28, "developing": 0.25,
+                                 "growing": 0.15, "fluent": 0.08, "capable": 0.05, "advanced": 0.05},
 }
 
 # Density factor by format (words-per-page proxy)
@@ -88,7 +96,8 @@ def compute_points(book: dict, reader: str, pages: int, audiobook: bool = False)
 
     # Special format override (graphic novel, easy reader)
     elif fmt in SPECIAL_OVERRIDES:
-        ppp = SPECIAL_OVERRIDES[fmt][reader]
+        _by_level = SPECIAL_OVERRIDES[fmt]
+        ppp = _by_level.get(level_for(reader), _by_level[DEFAULT_LEVEL])
         result = {
             "ppp": ppp, "points": pages * ppp,
             "tier": fmt, "tier_val": None, "bonus": None,

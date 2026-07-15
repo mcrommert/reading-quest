@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Log Reading — Summer Reading Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,500&family=Geist+Mono:wght@400;500;600&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFFCF4; --bg:#F5EFE1; --bg-2:#EFE7D4; --ink:#1A1814; --ink-2:#6B6455; --ink-3:#A8A08C;
+    --sun:oklch(75% 0.13 70); --sun-deep:oklch(58% 0.13 55);
+    --sea:oklch(52% 0.10 230); --sea-deep:oklch(38% 0.10 235);
+    --leaf:oklch(60% 0.12 145);
+    --serif:'Newsreader',Georgia,serif; --sans:'Geist',system-ui,sans-serif; --mono:'Geist Mono',ui-monospace,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-text-size-adjust:100%}
+  body{background-image:radial-gradient(800px 400px at 100% -10%,rgba(255,210,140,.3),transparent 60%),radial-gradient(700px 400px at -10% 110%,rgba(150,190,210,.22),transparent 60%);min-height:100vh}
+  .wrap{max-width:560px;margin:0 auto;padding:20px 16px 60px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+  h1{font-family:var(--serif);font-weight:600;font-size:30px;margin:0;letter-spacing:-.01em}
+  h1 em{font-style:italic;color:var(--sun-deep)}
+  .back{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2);text-decoration:none;border:1.5px solid var(--ink);border-radius:999px;padding:7px 12px;background:var(--paper);white-space:nowrap}
+  .card{background:var(--paper);border:1.5px solid var(--ink);box-shadow:5px 5px 0 var(--ink);border-radius:4px;padding:18px 16px}
+  label{display:block;font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-2);margin:16px 0 7px}
+  label:first-child{margin-top:0}
+  input[type=text],input[type=number],input[type=date],input[type=password],select{
+    width:100%;font-family:var(--sans);font-size:17px;padding:12px 12px;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);color:var(--ink);appearance:none}
+  input:focus,select:focus{outline:2px solid var(--sun);outline-offset:1px}
+  .seg{display:flex;flex-wrap:wrap;gap:8px}
+  .seg button{flex:1 1 auto;min-width:84px;font-family:var(--sans);font-weight:600;font-size:16px;padding:12px 10px;border:1.5px solid var(--ink);border-radius:8px;background:var(--paper);color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+  .seg button .mono{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-family:var(--serif);font-size:14px;font-weight:600;background:var(--bg)}
+  .seg button.on{background:var(--ink);color:var(--paper)}
+  .seg button.on .mono{background:var(--paper);color:var(--ink)}
+  .modeswitch{display:flex;gap:6px;margin-bottom:16px;background:var(--bg-2);border:1.5px solid var(--ink);border-radius:999px;padding:4px}
+  .modeswitch button{flex:1;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;padding:8px;border:0;border-radius:999px;background:transparent;color:var(--ink-2);cursor:pointer;font-weight:600}
+  .modeswitch button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .row{display:flex;gap:12px}
+  .row>div{flex:1}
+  .book-wrap{position:relative}
+  .suggest{position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;background:var(--paper);border:1.5px solid var(--ink);border-radius:8px;box-shadow:4px 4px 0 var(--ink);max-height:260px;overflow-y:auto;display:none}
+  .suggest.show{display:block}
+  .suggest .item{padding:11px 12px;cursor:pointer;border-bottom:1px solid var(--bg-2)}
+  .suggest .item:last-child{border-bottom:0}
+  .suggest .item:hover,.suggest .item.hi{background:var(--bg-2)}
+  .suggest .item .t{font-weight:600}
+  .suggest .item .m{font-family:var(--mono);font-size:11px;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+  .suggest .add{color:var(--sun-deep);font-weight:600}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:var(--bg-2);border:1.5px solid var(--ink);border-radius:999px;padding:7px 12px;font-weight:600;margin-top:2px}
+  .chip button{border:0;background:transparent;font-size:18px;line-height:1;cursor:pointer;color:var(--ink-2)}
+  .toggles{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .toggle{flex:1 1 auto;display:flex;align-items:center;gap:10px;border:1.5px solid var(--ink);border-radius:8px;padding:11px 12px;background:var(--paper);cursor:pointer;font-weight:500;user-select:none}
+  .toggle input{width:20px;height:20px;accent-color:var(--sun-deep)}
+  .toggle.on{background:var(--bg-2)}
+  .hidden{display:none!important}
+  .submit{width:100%;margin-top:20px;font-family:var(--sans);font-weight:600;font-size:18px;padding:15px;border:1.5px solid var(--ink);border-radius:10px;background:var(--sun);color:var(--ink);cursor:pointer;box-shadow:3px 3px 0 var(--ink)}
+  .submit:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .submit:disabled{opacity:.55;cursor:default}
+  .hint{font-family:var(--mono);font-size:11px;color:var(--ink-2);margin-top:6px;letter-spacing:.03em}
+  .msg{margin-top:16px;border-radius:8px;padding:13px 14px;font-weight:500;display:none}
+  .msg.show{display:block}
+  .msg.err{background:#FBE9E4;border:1.5px solid #C0492E;color:#7a2c19}
+  .result{margin-top:16px;background:var(--paper);border:1.5px solid var(--ink);box-shadow:4px 4px 0 var(--ink);border-radius:8px;padding:16px;display:none}
+  .result.show{display:block}
+  .result .big{font-family:var(--serif);font-size:40px;font-weight:600;color:var(--sun-deep);line-height:1}
+  .result .who{font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2)}
+  .result .bk{font-family:var(--serif);font-style:italic;font-size:19px;margin:6px 0 2px}
+  .result .tot{font-family:var(--mono);font-size:12px;color:var(--ink-2);margin-top:8px;letter-spacing:.03em}
+  .result .ev{margin-top:10px;padding-top:10px;border-top:1px dashed var(--ink)}
+  .result .ev div{margin:4px 0;font-weight:600}
+  .cmd textarea{width:100%;font-family:var(--mono);font-size:16px;padding:12px;border:1.5px solid var(--ink);border-radius:8px;min-height:64px;resize:vertical}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Log <em>Reading</em></h1>
+    <a class="back" href="/board/">← Board</a>
+  </header>
+
+  <div class="modeswitch">
+    <button id="mode-form" class="on" type="button">Form</button>
+    <button id="mode-cmd" type="button">Command</button>
+  </div>
+
+  <div class="card">
+    <!-- PIN (only if required) -->
+    <div id="pin-block" class="hidden">
+      <label>PIN</label>
+      <input id="pin" type="password" inputmode="numeric" autocomplete="off" placeholder="required to log">
+    </div>
+
+    <!-- ============ FORM MODE ============ -->
+    <form id="form" autocomplete="off">
+      <label>Who read?</label>
+      <div class="seg" id="readers"></div>
+
+      <label>Book</label>
+      <div class="book-wrap">
+        <input id="book" type="text" placeholder="Start typing a title…" autocomplete="off">
+        <div id="suggest" class="suggest"></div>
+      </div>
+      <div id="selected" class="hidden"></div>
+
+      <!-- new-book format/lexile (revealed when a typed book isn't in the catalog) -->
+      <div id="newbook" class="hidden">
+        <label>Format <span style="text-transform:none;color:var(--ink-3)">(new book)</span></label>
+        <select id="format"></select>
+        <div id="lexile-block" class="hidden">
+          <label>Lexile</label>
+          <input id="lexile" type="number" inputmode="numeric" placeholder="e.g. 750">
+          <div class="hint">Look it up at hub.lexile.com, or estimate.</div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Pages</label>
+          <input id="pages" type="number" inputmode="numeric" min="1" placeholder="0">
+        </div>
+        <div>
+          <label>Minutes <span style="text-transform:none;color:var(--ink-3)">(optional)</span></label>
+          <input id="minutes" type="number" inputmode="numeric" min="0" placeholder="0">
+        </div>
+      </div>
+
+      <label>Date</label>
+      <input id="date" type="date">
+
+      <div class="toggles">
+        <label class="toggle"><input id="finished" type="checkbox"> Finished the book</label>
+        <label class="toggle"><input id="audiobook" type="checkbox"> 🎧 Audiobook (¼ pts)</label>
+      </div>
+
+      <button class="submit" id="submit" type="submit">Log it</button>
+    </form>
+
+    <!-- ============ COMMAND MODE ============ -->
+    <div id="cmd" class="cmd hidden">
+      <label>Command</label>
+      <textarea id="cmdtext" placeholder='alex "Frog and Toad Are Friends" pages=30'></textarea>
+      <div class="hint">Same syntax as the /read slash command · add <b>finished</b>, <b>audiobook</b>, <b>date=yesterday</b>, <b>format=chapter lexile=750</b> for new books.</div>
+      <button class="submit" id="cmdsubmit" type="button">Run</button>
+    </div>
+
+    <div id="msg" class="msg"></div>
+    <div id="result" class="result"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = s => document.querySelector(s);
+  let CONFIG = {readers:[], formats:[], pin_required:false, max_pages:2000};
+  let selected = null;           // {key,title} chosen from catalog
+  let readerKey = null;
+  const el = {
+    readers:$("#readers"), book:$("#book"), suggest:$("#suggest"), selected:$("#selected"),
+    newbook:$("#newbook"), format:$("#format"), lexBlock:$("#lexile-block"), lexile:$("#lexile"),
+    pages:$("#pages"), minutes:$("#minutes"), date:$("#date"), finished:$("#finished"),
+    audiobook:$("#audiobook"), submit:$("#submit"), msg:$("#msg"), result:$("#result"),
+    pinBlock:$("#pin-block"), pin:$("#pin")
+  };
+
+  function showMsg(text, isErr){ el.msg.textContent=text; el.msg.className="msg show"+(isErr?" err":""); el.result.classList.remove("show"); }
+  function clearMsg(){ el.msg.className="msg"; }
+
+  fetch("/api/config").then(r=>r.json()).then(cfg=>{
+    CONFIG = cfg;
+    if(cfg.pin_required) el.pinBlock.classList.remove("hidden");
+    el.readers.innerHTML = cfg.readers.map(r =>
+      `<button type="button" data-key="${r.key}"><span class="mono">${r.monogram||r.name[0]}</span>${r.name}</button>`).join("");
+    el.readers.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+      readerKey=b.dataset.key;
+      el.readers.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+    }));
+    if(cfg.readers.length===1){ el.readers.firstChild.click(); }
+    el.format.innerHTML = cfg.formats.map(f=>`<option value="${f.value}" data-lex="${f.needs_lexile?1:0}">${f.label}</option>`).join("");
+    el.format.addEventListener("change", syncLex); syncLex();
+  });
+  function syncLex(){
+    const opt = el.format.selectedOptions[0];
+    el.lexBlock.classList.toggle("hidden", !(opt && opt.dataset.lex==="1"));
+  }
+
+  // ---------- book autocomplete ----------
+  let tmr=null, hi=-1;
+  el.book.addEventListener("input", ()=>{
+    clearSelected(); el.newbook.classList.add("hidden");
+    const q = el.book.value.trim();
+    clearTimeout(tmr);
+    if(q.length<2){ el.suggest.classList.remove("show"); return; }
+    tmr=setTimeout(()=>runSearch(q), 180);
+  });
+  function runSearch(q){
+    fetch("/api/books?q="+encodeURIComponent(q)+"&limit=8").then(r=>r.json()).then(list=>{
+      let html = list.map((b,i)=>{
+        const meta=[b.lexile?b.lexile+"L":null, (b.format||"").replace(/_/g," ")].filter(Boolean).join(" · ");
+        return `<div class="item" data-key="${b.key}" data-title="${b.title.replace(/"/g,'&quot;')}"><div class="t">${b.title}</div>${meta?`<div class="m">${meta}</div>`:""}</div>`;
+      }).join("");
+      html += `<div class="item add" data-add="1"><span class="add">＋ Add “${q}” as a new book</span></div>`;
+      el.suggest.innerHTML=html; el.suggest.classList.add("show"); hi=-1;
+      el.suggest.querySelectorAll(".item").forEach(it=>it.addEventListener("click",()=>{
+        if(it.dataset.add){ enterNewBook(el.book.value.trim()); }
+        else { pickBook(it.dataset.key, it.dataset.title); }
+      }));
+    });
+  }
+  function pickBook(key,title){
+    selected={key,title}; el.suggest.classList.remove("show"); el.newbook.classList.add("hidden");
+    el.book.value=""; el.book.classList.add("hidden");
+    el.selected.className=""; el.selected.innerHTML=`<span class="chip">${title}<button type="button" id="unpick">×</button></span>`;
+    $("#unpick").addEventListener("click",clearSelected);
+  }
+  function clearSelected(){
+    selected=null; el.selected.className="hidden"; el.selected.innerHTML="";
+    el.book.classList.remove("hidden"); el.suggest.classList.remove("show");
+  }
+  function enterNewBook(title){
+    selected=null; el.suggest.classList.remove("show");
+    el.book.value=title; el.newbook.classList.remove("hidden"); syncLex();
+  }
+  document.addEventListener("click",e=>{ if(!el.suggest.contains(e.target)&&e.target!==el.book) el.suggest.classList.remove("show"); });
+
+  // default date = today (local)
+  const t=new Date(); el.date.value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
+  document.querySelectorAll(".toggle input").forEach(i=>i.addEventListener("change",()=>i.closest(".toggle").classList.toggle("on",i.checked)));
+
+  // ---------- submit (form) ----------
+  $("#form").addEventListener("submit",e=>{e.preventDefault(); submitForm();});
+  function submitForm(){
+    clearMsg();
+    if(!readerKey) return showMsg("Pick who read.",true);
+    const pages=parseInt(el.pages.value,10);
+    if(!pages||pages<1) return showMsg("Enter a page count.",true);
+    const body={
+      reader:readerKey, pages:pages,
+      minutes:parseInt(el.minutes.value,10)||0,
+      date:el.date.value||undefined,
+      finished:el.finished.checked, audiobook:el.audiobook.checked
+    };
+    if(selected){ body.book_key=selected.key; }
+    else {
+      const title=el.book.value.trim();
+      if(!title) return showMsg("Pick or type a book.",true);
+      body.book=title;
+      if(!el.newbook.classList.contains("hidden")){
+        body.format=el.format.value;
+        if(!el.lexBlock.classList.contains("hidden")) body.lexile=el.lexile.value;
+      }
+    }
+    post(body);
+  }
+
+  // ---------- submit (command) ----------
+  $("#cmdsubmit").addEventListener("click",()=>{
+    clearMsg();
+    const command=$("#cmdtext").value.trim();
+    if(!command) return showMsg("Type a command.",true);
+    post({command});
+  });
+
+  function post(body){
+    if(CONFIG.pin_required) body.pin=el.pin.value;
+    el.submit.disabled=true;
+    fetch("/api/log",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)})
+      .then(r=>r.json()).then(d=>{
+        el.submit.disabled=false;
+        if(d.ok){ showResult(d); resetInputs(); }
+        else if(d.needs){
+          // typed book needs a format / lexile — reveal the new-book fields
+          enterNewBook(d.needs.title||el.book.value.trim());
+          if(d.needs.format){ el.format.value=d.needs.format; syncLex(); }
+          showMsg(d.needs.message||"This book needs a format.",true);
+        } else { showMsg(d.error||"Something went wrong.",true); }
+      }).catch(()=>{ el.submit.disabled=false; showMsg("Network error — is the server running?",true); });
+  }
+
+  function showResult(d){
+    clearMsg();
+    const evs = (d.events||[]).map(e=>`<div>🎉 ${e}</div>`).join("");
+    const warn = d.ug_warning?`<div style="color:#7a2c19">⚠️ ${d.ug_warning}</div>`:"";
+    el.result.innerHTML =
+      `<div class="who">${d.reader.toUpperCase()}${d.backdated?" · logged for "+d.session_date:""}</div>
+       <div class="big">+${fmt(d.points)} pts</div>
+       <div class="bk">${d.book_title}${d.audiobook?" 🎧":""}${d.finished?" — finished! 🏁":""}</div>
+       <div class="tot">${d.pages} pages × ${d.ppp} pts/pg${d.tier_label?" · "+d.tier_label:""} &nbsp;•&nbsp; week ${fmt(d.week_pts)} · total ${fmt(d.total_pts)}</div>
+       ${warn}${evs?`<div class="ev">${evs}</div>`:""}`;
+    el.result.className="result show";
+    el.result.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+  function fmt(n){ return (Math.round(n*10)/10).toString().replace(/\.0$/,""); }
+  function resetInputs(){
+    clearSelected(); el.newbook.classList.add("hidden");
+    el.book.value=""; el.pages.value=""; el.minutes.value="";
+    el.finished.checked=false; el.audiobook.checked=false;
+    document.querySelectorAll(".toggle").forEach(t=>t.classList.remove("on"));
+    $("#cmdtext").value="";
+  }
+
+  // ---------- mode switch ----------
+  $("#mode-form").addEventListener("click",()=>switchMode("form"));
+  $("#mode-cmd").addEventListener("click",()=>switchMode("cmd"));
+  function switchMode(m){
+    const f=m==="form";
+    $("#mode-form").classList.toggle("on",f); $("#mode-cmd").classList.toggle("on",!f);
+    $("#form").classList.toggle("hidden",!f); $("#cmd").classList.toggle("hidden",f);
+    clearMsg(); el.result.classList.remove("show");
+  }
+})();
+</script>
+</body>
+</html>

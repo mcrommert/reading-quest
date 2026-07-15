@@ -1344,6 +1344,237 @@ async def library_json():
 
 # ===========================================================================
 
+# ===========================================================================
+# Web logging API — lets you log reading from the browser (the /log page),
+# so Mattermost is optional. Reuses the same scoring/db helpers the slash
+# commands use. Optional LOG_PIN gates writes for internet-exposed deploys.
+# ===========================================================================
+LOG_PIN = os.environ.get("LOG_PIN", "")
+
+_WEB_FORMATS = [
+    {"value": "chapter_book",        "label": "Chapter book",       "needs_lexile": True},
+    {"value": "early_chapter_book",  "label": "Early chapter book", "needs_lexile": False},
+    {"value": "graphic_novel",       "label": "Graphic novel",      "needs_lexile": False},
+    {"value": "easy_reader",         "label": "Easy reader",        "needs_lexile": False},
+    {"value": "picture_book",        "label": "Picture book",       "needs_lexile": False},
+    {"value": "nonfiction",          "label": "Nonfiction",         "needs_lexile": True},
+    {"value": "dense_middle_grade",  "label": "Dense middle-grade", "needs_lexile": True},
+    {"value": "dense_classic",       "label": "Dense classic",      "needs_lexile": True},
+]
+_VALID_FORMATS = {f["value"] for f in _WEB_FORMATS}
+
+
+def _plain(s: str) -> str:
+    """Strip Markdown emphasis so a slash-style message reads cleanly as text."""
+    return re.sub(r"\*\*|\*|`|_", "", s or "").strip()
+
+
+def _log_pin_ok(request: Request, body: dict) -> bool:
+    if not LOG_PIN:
+        return True
+    supplied = request.headers.get("X-Log-Pin") or (body.get("pin") if isinstance(body, dict) else "") or ""
+    return hmac.compare_digest(str(supplied), LOG_PIN)
+
+
+def _book_by_key(key: str):
+    for b in _all_books():
+        if b.get("key") == key:
+            return b
+    return None
+
+
+def resolve_book_for_log(book_raw: str, fmt_hint, inline_lexile):
+    """Non-interactive book resolution for the web form.
+
+    Returns (book, None) if resolved, or (None, needs_dict) when a new book
+    needs a format (and Lexile) from the user before it can be added.
+    """
+    book, _ = find_book(book_raw)
+    if book is not None:
+        return book, None
+
+    title = book_raw.strip()
+    key = re.sub(r"\s+", "-", normalize(book_raw))[:40]
+
+    if fmt_hint not in _VALID_FORMATS:
+        return None, {"reason": "new_book", "title": title,
+                      "message": f"“{title}” isn’t in the catalog yet — pick a format to add it."}
+    needs_lex = next((f["needs_lexile"] for f in _WEB_FORMATS if f["value"] == fmt_hint), False)
+    if needs_lex and inline_lexile is None:
+        return None, {"reason": "need_lexile", "title": title, "format": fmt_hint,
+                      "message": f"“{title}” needs a Lexile (look it up at hub.lexile.com, or estimate)."}
+
+    lex = inline_lexile if needs_lex else None
+    db.add_custom_book(key, title, lex, fmt_hint, "standard", [normalize(title)])
+    return {"key": key, "title": title, "lexile": lex or 0,
+            "format": fmt_hint, "classification": "standard"}, None
+
+
+def perform_log(reader, book, pages, minutes, finished, audiobook,
+                session_date_local, today_local) -> dict:
+    """Shared logging core: score, persist, run milestone/family/bingo side
+    effects + calendar sync, and return a structured result. Used by the web
+    API; mirrors what the /read slash handler does."""
+    ug_warning = None
+    _rcfg = get_reader(reader)
+    if _rcfg and _rcfg.get("warn_upper_grade") and book.get("interest_level") == "UG":
+        ug_warning = (f"{book['title']} is tagged for upper grades (9+). "
+                      "Make sure a parent has previewed the content.")
+
+    result = scoring.compute_points(book, reader, pages, audiobook=audiobook)
+    ppp, points = result["ppp"], result["points"]
+
+    prev_combined = sum(db.get_total_stats(k)["pts"] for k in READER_KEYS)
+    prev_total = db.get_total_stats(reader)["pts"]
+
+    db.log_session(reader, book["key"], book["title"], pages, minutes, ppp, points,
+                   finished=finished, session_date=session_date_local.isoformat(),
+                   audiobook=audiobook)
+
+    daily = db.get_daily_stats(reader, session_date_local.isoformat())
+    weekly = db.get_weekly_stats(reader, today=session_date_local)
+    total = db.get_total_stats(reader)
+
+    events = []
+    for msg in check_milestones(reader, prev_total, total["pts"]):
+        gcal.post_milestone(reader, msg, total["pts"], session_date_local)
+        events.append(_plain(msg))
+
+    new_combined = sum(db.get_total_stats(k)["pts"] for k in READER_KEYS)
+    for pct in check_family_goal(prev_combined, new_combined):
+        events.append(f"Family goal {pct}% reached: {fmt_pts(new_combined)} / {FAMILY_GOAL} pts!")
+        gcal.post_family_goal(pct, new_combined, FAMILY_GOAL, session_date_local)
+
+    for bl in (_process_bingo(reader, pages, minutes, book, finished, book["key"],
+                              session_date_local.isoformat(), audiobook=audiobook) or []):
+        line = _plain(bl)
+        if line:
+            events.append(line)
+
+    _post_realtime_summaries(reader, today_local)
+    backdated = session_date_local != today_local
+    if backdated:
+        _post_realtime_summaries(reader, session_date_local)
+
+    return {
+        "reader": reader, "book_title": book["title"],
+        "pages": pages, "minutes": minutes, "finished": finished, "audiobook": audiobook,
+        "ppp": ppp, "points": points, "tier": result.get("tier"),
+        "tier_label": scoring.TIER_LABELS.get(result.get("tier"), result.get("tier")),
+        "lexile": result.get("lexile"), "format": result.get("format"),
+        "daily_pages": daily["pages"], "week_pts": weekly["pts"], "total_pts": total["pts"],
+        "ug_warning": ug_warning, "events": events,
+        "backdated": backdated, "session_date": session_date_local.isoformat(),
+    }
+
+
+@app.get("/log", include_in_schema=False)
+async def log_page():
+    return FileResponse(BOARD_DIR / "log.html", media_type="text/html")
+
+
+@app.get("/api/config", include_in_schema=False)
+async def api_config():
+    return JSONResponse({
+        "readers": PLAYERS_CONFIG,
+        "formats": _WEB_FORMATS,
+        "pin_required": bool(LOG_PIN),
+        "max_pages": MAX_PAGES,
+    }, headers={"Cache-Control": "no-store"})
+
+
+@app.get("/api/books", include_in_schema=False)
+async def api_books(q: str = "", limit: int = 8):
+    q = (q or "").strip()
+    if len(q) < 2:
+        return JSONResponse([])
+    idx = _build_index(_all_books())
+    matches = process.extract(normalize(q), list(idx.keys()),
+                              scorer=fuzz.token_set_ratio, limit=max(limit * 3, 12))
+    seen, out = set(), []
+    for alias, score, _ in matches:
+        b = idx[alias]
+        if b["key"] in seen:
+            continue
+        seen.add(b["key"])
+        out.append({"key": b["key"], "title": b["title"], "lexile": b.get("lexile"),
+                    "format": b.get("format"), "classification": b.get("classification")})
+        if len(out) >= limit:
+            break
+    return JSONResponse(out)
+
+
+@app.post("/api/log", include_in_schema=False)
+async def api_log(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Expected a JSON body."}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "Expected a JSON object."}, status_code=400)
+    if not _log_pin_ok(request, body):
+        return JSONResponse({"ok": False, "error": "Wrong or missing PIN."}, status_code=403)
+
+    # ---- command-bar path: same syntax as the /read slash command ----
+    if body.get("command"):
+        parsed = parse_read_command(body["command"])
+        if "error" in parsed:
+            return JSONResponse({"ok": False, "error": _plain(parsed["error"])}, status_code=400)
+        reader, pages, minutes = parsed["reader"], parsed["pages"], parsed["minutes"]
+        book_raw, fmt_hint = parsed["book_raw"], parsed.get("format_hint")
+        finished = parsed.get("finished", False)
+        audiobook = parsed.get("audiobook", False)
+        date_hint = parsed.get("date")
+        m = re.search(r"lexile\s*=\s*(\d+)", body["command"].lower())
+        inline_lexile = int(m.group(1)) if m else None
+        book_key = None
+    # ---- structured-form path ----
+    else:
+        reader = resolve_reader(body.get("reader", ""))
+        if not reader:
+            return JSONResponse({"ok": False, "error": "Pick a reader."}, status_code=400)
+        try:
+            pages = int(body.get("pages"))
+        except (TypeError, ValueError):
+            return JSONResponse({"ok": False, "error": "Enter a page count."}, status_code=400)
+        if pages <= 0:
+            return JSONResponse({"ok": False, "error": "Pages must be greater than 0."}, status_code=400)
+        if pages > MAX_PAGES:
+            return JSONResponse({"ok": False, "error": f"Pages looks too large (max {MAX_PAGES}) — split into sessions."}, status_code=400)
+        try:
+            minutes = int(body.get("minutes") or 0)
+        except (TypeError, ValueError):
+            minutes = 0
+        book_raw = (body.get("book") or "").strip()
+        book_key = (body.get("book_key") or "").strip() or None
+        fmt_hint = (body.get("format") or "").strip() or None
+        inline_lexile = int(body["lexile"]) if str(body.get("lexile") or "").strip().isdigit() else None
+        finished = bool(body.get("finished"))
+        audiobook = bool(body.get("audiobook"))
+        date_hint = (body.get("date") or "").strip() or None
+        if not book_raw and not book_key:
+            return JSONResponse({"ok": False, "error": "Pick or type a book."}, status_code=400)
+
+    # ---- resolve the book ----
+    if body.get("book_key"):
+        book = _book_by_key(body["book_key"])
+        if book is None:
+            return JSONResponse({"ok": False, "error": "That book is no longer available."}, status_code=400)
+    else:
+        book, needs = resolve_book_for_log(book_raw, fmt_hint, inline_lexile)
+        if needs:
+            return JSONResponse({"ok": False, "needs": needs})
+
+    today_local = _today()
+    session_date_local = _parse_session_date(date_hint, today_local)
+    if session_date_local is None:
+        return JSONResponse({"ok": False, "error": f"Couldn’t understand the date (or it’s in the future). Nothing logged."}, status_code=400)
+
+    res = perform_log(reader, book, pages, minutes, finished, audiobook,
+                      session_date_local, today_local)
+    return JSONResponse({"ok": True, **res})
+
+
 @app.post("/slash/read")
 
 async def slash_read(request: Request):
