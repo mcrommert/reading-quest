@@ -20,53 +20,53 @@ reader points at one by key. Two readers can share a level.
 # Two readers can share a level.
 # ---------------------------------------------------------------------------
 LEVELS = {
-    "emerging": [   # ~PreK–K, just starting to decode
-        (100,  "way_below",   0.25),
-        (200,  "easy",        0.50),
-        (300,  "comfort",     1.00),
-        (450,  "stretch",     1.50),
+    "emerging": [  # ~PreK–K, just starting to decode
+        (100, "way_below", 0.25),
+        (200, "easy", 0.50),
+        (300, "comfort", 1.00),
+        (450, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
     "beginning": [  # ~1st grade
-        (150,  "way_below",   0.25),
-        (250,  "easy",        0.50),
-        (380,  "comfort",     1.00),
-        (520,  "stretch",     1.50),
+        (150, "way_below", 0.25),
+        (250, "easy", 0.50),
+        (380, "comfort", 1.00),
+        (520, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
     "developing": [  # ~2nd grade
-        (200,  "way_below",   0.25),
-        (300,  "easy",        0.50),
-        (450,  "comfort",     1.00),
-        (600,  "stretch",     1.50),
+        (200, "way_below", 0.25),
+        (300, "easy", 0.50),
+        (450, "comfort", 1.00),
+        (600, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
-    "growing": [    # ~3rd grade
-        (300,  "way_below",   0.25),
-        (450,  "easy",        0.50),
-        (650,  "comfort",     1.00),
-        (850,  "stretch",     1.50),
+    "growing": [  # ~3rd grade
+        (300, "way_below", 0.25),
+        (450, "easy", 0.50),
+        (650, "comfort", 1.00),
+        (850, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
-    "fluent": [     # ~4th–5th grade
-        (450,  "way_below",   0.25),
-        (650,  "easy",        0.50),
-        (900,  "comfort",     1.00),
-        (1100, "stretch",     1.50),
+    "fluent": [  # ~4th–5th grade
+        (450, "way_below", 0.25),
+        (650, "easy", 0.50),
+        (900, "comfort", 1.00),
+        (1100, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
-    "capable": [    # ~5th–6th grade
-        (600,  "way_below",   0.25),
-        (800,  "easy",        0.50),
-        (1100, "comfort",     1.00),
-        (1300, "stretch",     1.50),
+    "capable": [  # ~5th–6th grade
+        (600, "way_below", 0.25),
+        (800, "easy", 0.50),
+        (1100, "comfort", 1.00),
+        (1300, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
-    "advanced": [   # ~7th–8th / early HS
-        (800,  "way_below",   0.25),
-        (1000, "easy",        0.50),
-        (1300, "comfort",     1.00),
-        (1500, "stretch",     1.50),
+    "advanced": [  # ~7th–8th / early HS
+        (800, "way_below", 0.25),
+        (1000, "easy", 0.50),
+        (1300, "comfort", 1.00),
+        (1500, "stretch", 1.50),
         (None, "big_stretch", 2.00),
     ],
 }
@@ -81,9 +81,9 @@ DEFAULT_LEVEL = "developing"
 # shipped sample (reader_config_example.py). See that file for the schema.
 # Add a reader there (a key + a level) and the whole app picks them up.
 try:
-    from reader_config import READERS            # your real family (gitignored)
-except ImportError:                              # pragma: no cover
-    from reader_config_example import READERS    # shipped sample
+    from reader_config import READERS  # your real family (gitignored)
+except ImportError:  # pragma: no cover
+    from reader_config_example import READERS  # shipped sample
 
 READERS_BY_KEY = {r["key"]: r for r in READERS}
 READER_KEYS = [r["key"] for r in READERS]

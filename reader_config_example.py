@@ -17,6 +17,23 @@ Each reader:
 """
 
 READERS = [
-    {"key": "alex", "name": "Alex", "monogram": "A", "age": 7,  "grade": "2nd grade", "level": "developing", "aliases": ["a"]},
-    {"key": "sam",  "name": "Sam",  "monogram": "S", "age": 10, "grade": "5th grade", "level": "capable",    "aliases": ["s"], "warn_upper_grade": True},
+    {
+        "key": "alex",
+        "name": "Alex",
+        "monogram": "A",
+        "age": 7,
+        "grade": "2nd grade",
+        "level": "developing",
+        "aliases": ["a"],
+    },
+    {
+        "key": "sam",
+        "name": "Sam",
+        "monogram": "S",
+        "age": 10,
+        "grade": "5th grade",
+        "level": "capable",
+        "aliases": ["s"],
+        "warn_upper_grade": True,
+    },
 ]
