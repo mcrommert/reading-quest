@@ -4,13 +4,40 @@ on:
   push:
     branches: [main]
     tags: ['v*']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 env:
   IMAGE: ghcr.io/${{ github.repository }}
 
 jobs:
+  # Gate. The scoring parity suite replays real logged sessions against the
+  # pre-refactor baseline: a change here means a change to what a child's
+  # reading is worth, which is invisible on the board. Never publish past a
+  # red test.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest tests/ -q
+
   build-and-push:
+    needs: test
+    # Pull requests validate through the test job; only pushes publish.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read

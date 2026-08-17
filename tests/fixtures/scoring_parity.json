@@ -1,0 +1,1750 @@
+{
+  "_comment": "Golden scoring outputs captured from reading-bot prod code (private reading-bot master f6d12ab) before the reading-quest 2.0.0 refactor. Readers mapped to the sample family; dates dropped. Regenerate with gen_parity_fixture.py.",
+  "source_commit": "f6d12ab",
+  "case_count": 90,
+  "cases": [
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-4-pirates-past-noon",
+      "book": {
+        "key": "magic-tree-house-4-pirates-past-noon",
+        "title": "Magic Tree House #4: Pirates Past Noon",
+        "lexile": 490,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 22,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 33.0,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "captain-underpants-1-the-adventures-of-captain-underpants",
+      "book": {
+        "key": "captain-underpants-1-the-adventures-of-captain-underpants",
+        "title": "Captain Underpants #1: The Adventures of Captain Underpants",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 170,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.12,
+        "points": 20.4,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-4-pirates-past-noon",
+      "book": {
+        "key": "magic-tree-house-4-pirates-past-noon",
+        "title": "Magic Tree House #4: Pirates Past Noon",
+        "lexile": 490,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 7,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 10.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-wind-in-the-door",
+      "book": {
+        "key": "a-wind-in-the-door",
+        "title": "A Wind in the Door",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 36,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 46.8,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-4-pirates-past-noon",
+      "book": {
+        "key": "magic-tree-house-4-pirates-past-noon",
+        "title": "Magic Tree House #4: Pirates Past Noon",
+        "lexile": 490,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 7,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 10.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-4-pirates-past-noon",
+      "book": {
+        "key": "magic-tree-house-4-pirates-past-noon",
+        "title": "Magic Tree House #4: Pirates Past Noon",
+        "lexile": 490,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 31,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 46.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-wind-in-the-door",
+      "book": {
+        "key": "a-wind-in-the-door",
+        "title": "A Wind in the Door",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 40,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 52.0,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-1-dinosaurs-before-dark",
+      "book": {
+        "key": "magic-tree-house-1-dinosaurs-before-dark",
+        "title": "Magic Tree House #1: Dinosaurs Before Dark",
+        "lexile": 380,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 42,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 42.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-wind-in-the-door",
+      "book": {
+        "key": "a-wind-in-the-door",
+        "title": "A Wind in the Door",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 40,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 52.0,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-1-dinosaurs-before-dark",
+      "book": {
+        "key": "magic-tree-house-1-dinosaurs-before-dark",
+        "title": "Magic Tree House #1: Dinosaurs Before Dark",
+        "lexile": 380,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 31,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 31.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "holes",
+      "book": {
+        "key": "holes",
+        "title": "Holes",
+        "lexile": 660,
+        "format": "chapter_book",
+        "classification": "modern_classic"
+      },
+      "pages": 48,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.98,
+        "points": 47.04,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-2-the-knight-at-dawn",
+      "book": {
+        "key": "magic-tree-house-2-the-knight-at-dawn",
+        "title": "Magic Tree House #2: The Knight at Dawn",
+        "lexile": 380,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 24,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 24.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-wind-in-the-door",
+      "book": {
+        "key": "a-wind-in-the-door",
+        "title": "A Wind in the Door",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 84,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 109.2,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-wind-in-the-door",
+      "book": {
+        "key": "a-wind-in-the-door",
+        "title": "A Wind in the Door",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 11,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 14.3,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-2-the-knight-at-dawn",
+      "book": {
+        "key": "magic-tree-house-2-the-knight-at-dawn",
+        "title": "Magic Tree House #2: The Knight at Dawn",
+        "lexile": 380,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 42,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 42.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-3-mummies-in-the-morning",
+      "book": {
+        "key": "magic-tree-house-3-mummies-in-the-morning",
+        "title": "Magic Tree House #3: Mummies in the Morning",
+        "lexile": 390,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 11,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 11.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "holes",
+      "book": {
+        "key": "holes",
+        "title": "Holes",
+        "lexile": 660,
+        "format": "chapter_book",
+        "classification": "modern_classic"
+      },
+      "pages": 14,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.98,
+        "points": 13.72,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "holes",
+      "book": {
+        "key": "holes",
+        "title": "Holes",
+        "lexile": 660,
+        "format": "chapter_book",
+        "classification": "modern_classic"
+      },
+      "pages": 127,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.98,
+        "points": 124.46,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants-1-the-adventures-of-captain-underpants",
+      "book": {
+        "key": "captain-underpants-1-the-adventures-of-captain-underpants",
+        "title": "Captain Underpants #1: The Adventures of Captain Underpants",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 79,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.4,
+        "points": 31.6,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants-1-the-adventures-of-captain-underpants",
+      "book": {
+        "key": "captain-underpants-1-the-adventures-of-captain-underpants",
+        "title": "Captain Underpants #1: The Adventures of Captain Underpants",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 91,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.4,
+        "points": 36.4,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-3-mummies-in-the-morning",
+      "book": {
+        "key": "magic-tree-house-3-mummies-in-the-morning",
+        "title": "Magic Tree House #3: Mummies in the Morning",
+        "lexile": 390,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 54,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 54.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-the-golden-globe",
+      "book": {
+        "key": "sw-junior-jedi-knights-the-golden-globe",
+        "title": "Star Wars (Junior Jedi Knights): The Golden Globe",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 34,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 8.5,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "sw-junior-jedi-knights-the-golden-globe",
+      "book": {
+        "key": "sw-junior-jedi-knights-the-golden-globe",
+        "title": "Star Wars (Junior Jedi Knights): The Golden Globe",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 19,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 28.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-the-golden-globe",
+      "book": {
+        "key": "sw-junior-jedi-knights-the-golden-globe",
+        "title": "Star Wars (Junior Jedi Knights): The Golden Globe",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 15,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 3.75,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-the-golden-globe",
+      "book": {
+        "key": "sw-junior-jedi-knights-the-golden-globe",
+        "title": "Star Wars (Junior Jedi Knights): The Golden Globe",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 14,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 3.5,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
+      "book": {
+        "key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
+        "title": "Captain Underpants #2: Attack of the Talking Toilets",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 32,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.4,
+        "points": 12.8,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
+      "book": {
+        "key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
+        "title": "Captain Underpants #2: Attack of the Talking Toilets",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 105,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.4,
+        "points": 42.0,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
+      "book": {
+        "key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
+        "title": "Captain Underpants #2: Attack of the Talking Toilets",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 137,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.12,
+        "points": 16.44,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
+      "book": {
+        "key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
+        "title": "Captain Underpants #3: Invasion of the Incredibly Naughty Cafeteria Ladies from Outer Space",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 139,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.12,
+        "points": 16.68,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-series-of-unfortunate-events-1-the-bad-beginning",
+      "book": {
+        "key": "a-series-of-unfortunate-events-1-the-bad-beginning",
+        "title": "A Series of Unfortunate Events #1: The Bad Beginning",
+        "lexile": 1010,
+        "format": "chapter_book",
+        "classification": "standard",
+        "density_factor": 1.0
+      },
+      "pages": 55,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 55.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-5-night-of-the-ninjas",
+      "book": {
+        "key": "magic-tree-house-5-night-of-the-ninjas",
+        "title": "Magic Tree House #5: Night of the Ninjas",
+        "lexile": 460,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 69,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 103.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-the-golden-globe",
+      "book": {
+        "key": "sw-junior-jedi-knights-the-golden-globe",
+        "title": "Star Wars (Junior Jedi Knights): The Golden Globe",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 15,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 3.75,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-6-afternoon-on-the-amazon",
+      "book": {
+        "key": "magic-tree-house-6-afternoon-on-the-amazon",
+        "title": "Magic Tree House #6: Afternoon on the Amazon",
+        "lexile": 430,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 67,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 67.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-the-golden-globe",
+      "book": {
+        "key": "sw-junior-jedi-knights-the-golden-globe",
+        "title": "Star Wars (Junior Jedi Knights): The Golden Globe",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 38,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 9.5,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-7-sunset-of-the-sabertooth",
+      "book": {
+        "key": "magic-tree-house-7-sunset-of-the-sabertooth",
+        "title": "Magic Tree House #7: Sunset of the Sabertooth",
+        "lexile": 380,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 10,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 10.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-lyric-s-world",
+      "book": {
+        "key": "sw-junior-jedi-knights-lyric-s-world",
+        "title": "Star Wars (Junior Jedi Knights): Lyric's World",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 37,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 9.25,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-7-sunset-of-the-sabertooth",
+      "book": {
+        "key": "magic-tree-house-7-sunset-of-the-sabertooth",
+        "title": "Magic Tree House #7: Sunset of the Sabertooth",
+        "lexile": 380,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 58,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 58.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-8-midnight-on-the-moon",
+      "book": {
+        "key": "magic-tree-house-8-midnight-on-the-moon",
+        "title": "Magic Tree House #8: Midnight on the Moon",
+        "lexile": 490,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 70,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 105.0,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-junior-jedi-knights-lyric-s-world",
+      "book": {
+        "key": "sw-junior-jedi-knights-lyric-s-world",
+        "title": "Star Wars (Junior Jedi Knights): Lyric's World",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 90,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 22.5,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-9-dolphins-at-daybreak",
+      "book": {
+        "key": "magic-tree-house-9-dolphins-at-daybreak",
+        "title": "Magic Tree House #9: Dolphins at Daybreak",
+        "lexile": 430,
+        "format": "early_chapter_book",
+        "classification": "fiction"
+      },
+      "pages": 67,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 67.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "disney-zootopia-2-little-golden-book",
+      "book": {
+        "key": "disney-zootopia-2-little-golden-book",
+        "title": "Zootopia 2 (Little Golden Book)",
+        "lexile": 0,
+        "format": "picture_book",
+        "classification": "standard"
+      },
+      "pages": 24,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 6.0,
+        "tier": "picture_book"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 15,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 45.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-10-ghost-town-at-sundown",
+      "book": {
+        "key": "magic-tree-house-10-ghost-town-at-sundown",
+        "title": "Magic Tree House #10: Ghost Town at Sundown",
+        "lexile": 510,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 75,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 112.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 15,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 45.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-11-lions-at-lunchtime",
+      "book": {
+        "key": "magic-tree-house-11-lions-at-lunchtime",
+        "title": "Magic Tree House #11: Lions at Lunchtime",
+        "lexile": 520,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 70,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 105.0,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-12-polar-bears-past-bedtime",
+      "book": {
+        "key": "magic-tree-house-12-polar-bears-past-bedtime",
+        "title": "Magic Tree House #12: Polar Bears Past Bedtime",
+        "lexile": 500,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 12,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 18.0,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 15,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 45.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 26,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 78.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-12-polar-bears-past-bedtime",
+      "book": {
+        "key": "magic-tree-house-12-polar-bears-past-bedtime",
+        "title": "Magic Tree House #12: Polar Bears Past Bedtime",
+        "lexile": 500,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 59,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 88.5,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 28,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 84.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 12,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 36.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "star-wars-what-is-a-wookiee",
+      "book": {
+        "key": "star-wars-what-is-a-wookiee",
+        "title": "Star Wars: What Is a Wookiee? (DK Readers)",
+        "lexile": 360,
+        "format": "picture_book",
+        "classification": "standard"
+      },
+      "pages": 44,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.25,
+        "points": 11.0,
+        "tier": "picture_book"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "star-wars-clone-wars-watch-out-for-jabba-the-hutt",
+      "book": {
+        "key": "star-wars-clone-wars-watch-out-for-jabba-the-hutt",
+        "title": "Star Wars: The Clone Wars - Watch Out for Jabba the Hutt!",
+        "lexile": 550,
+        "format": "easy_reader",
+        "classification": "standard"
+      },
+      "pages": 32,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.5,
+        "points": 16.0,
+        "tier": "easy_reader"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "lego-star-wars-a-new-hope",
+      "book": {
+        "key": "lego-star-wars-a-new-hope",
+        "title": "LEGO Star Wars: A New Hope (DK Readers)",
+        "lexile": 450,
+        "format": "easy_reader",
+        "classification": "standard"
+      },
+      "pages": 32,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.5,
+        "points": 16.0,
+        "tier": "easy_reader"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 30,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 90.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "dog-man-grime-and-punishment-9",
+      "book": {
+        "key": "dog-man-grime-and-punishment-9",
+        "title": "Dog Man: Grime and Punishment (#9)",
+        "lexile": null,
+        "format": "graphic_novel",
+        "classification": "standard"
+      },
+      "pages": 236,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.2,
+        "points": 47.2,
+        "tier": "graphic_novel"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "mickey-mouse-and-his-boat",
+      "book": {
+        "key": "mickey-mouse-and-his-boat",
+        "title": "Walt Disney's Mickey Mouse and His Boat (Golden Easy Reader)",
+        "lexile": 300,
+        "format": "easy_reader",
+        "classification": "standard"
+      },
+      "pages": 24,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.5,
+        "points": 12.0,
+        "tier": "easy_reader"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "star-wars-luke-skywalkers-amazing-story",
+      "book": {
+        "key": "star-wars-luke-skywalkers-amazing-story",
+        "title": "Star Wars: Luke Skywalker's Amazing Story (DK Readers L1)",
+        "lexile": 400,
+        "format": "easy_reader",
+        "classification": "standard"
+      },
+      "pages": 24,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.5,
+        "points": 12.0,
+        "tier": "easy_reader"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "treasure-island",
+      "book": {
+        "key": "treasure-island",
+        "title": "Treasure Island",
+        "lexile": 1070,
+        "format": "dense_classic",
+        "classification": "masterpiece"
+      },
+      "pages": 49,
+      "audiobook": false,
+      "expected": {
+        "ppp": 3.0,
+        "points": 147.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-to-z-mysteries-super-edition-1-detective-camp",
+      "book": {
+        "key": "a-to-z-mysteries-super-edition-1-detective-camp",
+        "title": "A to Z Mysteries Super Edition #1: Detective Camp",
+        "lexile": 540,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 48,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.33,
+        "points": 15.84,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
+      "book": {
+        "key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
+        "title": "Captain Underpants #3: Invasion of the Incredibly Naughty Cafeteria Ladies from Outer Space",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 98,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.4,
+        "points": 39.2,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "a-to-z-mysteries-super-edition-1-detective-camp",
+      "book": {
+        "key": "a-to-z-mysteries-super-edition-1-detective-camp",
+        "title": "A to Z Mysteries Super Edition #1: Detective Camp",
+        "lexile": 540,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 83,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.33,
+        "points": 27.39,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-jedi-prince-the-glove-of-darth-vader",
+      "book": {
+        "key": "sw-jedi-prince-the-glove-of-darth-vader",
+        "title": "Star Wars (Jedi Prince): The Glove of Darth Vader",
+        "lexile": 600,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 38,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 24.7,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
+      "book": {
+        "key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
+        "title": "Captain Underpants #3: Invasion of the Incredibly Naughty Cafeteria Ladies from Outer Space",
+        "lexile": 720,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 57,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.4,
+        "points": 22.8,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-jedi-prince-the-glove-of-darth-vader",
+      "book": {
+        "key": "sw-jedi-prince-the-glove-of-darth-vader",
+        "title": "Star Wars (Jedi Prince): The Glove of Darth Vader",
+        "lexile": 600,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 53,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 34.45,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "sw-clone-wars-hunt-for-grievous",
+      "book": {
+        "key": "sw-clone-wars-hunt-for-grievous",
+        "title": "The Hunt for Grievous (Star Wars: The Clone Wars)",
+        "lexile": 480,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 30,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 45.0,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-jedi-prince-the-lost-city-of-the-jedi",
+      "book": {
+        "key": "sw-jedi-prince-the-lost-city-of-the-jedi",
+        "title": "Star Wars (Jedi Prince): The Lost City of the Jedi",
+        "lexile": 600,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 42,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 27.3,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-jedi-prince-the-lost-city-of-the-jedi",
+      "book": {
+        "key": "sw-jedi-prince-the-lost-city-of-the-jedi",
+        "title": "Star Wars (Jedi Prince): The Lost City of the Jedi",
+        "lexile": 600,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 44,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 28.6,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "sw-jedi-prince-zorba-the-hutt-s-revenge",
+      "book": {
+        "key": "sw-jedi-prince-zorba-the-hutt-s-revenge",
+        "title": "Star Wars (Jedi Prince): Zorba the Hutt's Revenge",
+        "lexile": 600,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 87,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 56.55,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-13-vacation-under-the-volcano",
+      "book": {
+        "key": "magic-tree-house-13-vacation-under-the-volcano",
+        "title": "Magic Tree House #13: Vacation Under the Volcano",
+        "lexile": 410,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 28,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 28.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "roald-dahl-fantastic-mr-fox",
+      "book": {
+        "key": "roald-dahl-fantastic-mr-fox",
+        "title": "Fantastic Mr. Fox",
+        "lexile": 650,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 82,
+      "audiobook": false,
+      "expected": {
+        "ppp": 2.6,
+        "points": 213.2,
+        "tier": "big_stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "roald-dahl-esio-trot",
+      "book": {
+        "key": "roald-dahl-esio-trot",
+        "title": "Esio Trot",
+        "lexile": 850,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 57,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 74.1,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "roald-dahl-the-magic-finger",
+      "book": {
+        "key": "roald-dahl-the-magic-finger",
+        "title": "The Magic Finger",
+        "lexile": 550,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 57,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.33,
+        "points": 18.81,
+        "tier": "way_below"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "sw-clone-wars-hunt-for-grievous",
+      "book": {
+        "key": "sw-clone-wars-hunt-for-grievous",
+        "title": "The Hunt for Grievous (Star Wars: The Clone Wars)",
+        "lexile": 480,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 20,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.5,
+        "points": 30.0,
+        "tier": "stretch"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "magic-tree-house-13-vacation-under-the-volcano",
+      "book": {
+        "key": "magic-tree-house-13-vacation-under-the-volcano",
+        "title": "Magic Tree House #13: Vacation Under the Volcano",
+        "lexile": 410,
+        "format": "early_chapter_book",
+        "classification": "standard"
+      },
+      "pages": 46,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.0,
+        "points": 46.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "charlie-chocolate-factory",
+      "book": {
+        "key": "charlie-chocolate-factory",
+        "title": "Charlie and the Chocolate Factory",
+        "lexile": 810,
+        "format": "chapter_book",
+        "classification": "modern_classic"
+      },
+      "pages": 180,
+      "audiobook": false,
+      "expected": {
+        "ppp": 2.93,
+        "points": 527.4,
+        "tier": "big_stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "roald-dahl-the-twits",
+      "book": {
+        "key": "roald-dahl-the-twits",
+        "title": "The Twits",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 87,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 56.55,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "roald-dahl-the-minpins",
+      "book": {
+        "key": "roald-dahl-the-minpins",
+        "title": "The Minpins",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 98,
+      "audiobook": false,
+      "expected": {
+        "ppp": 0.65,
+        "points": 63.7,
+        "tier": "easy"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "roald-dahl-charlie-and-the-great-glass-elevator",
+      "book": {
+        "key": "roald-dahl-charlie-and-the-great-glass-elevator",
+        "title": "Charlie and the Great Glass Elevator",
+        "lexile": 750,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 182,
+      "audiobook": false,
+      "expected": {
+        "ppp": 2.6,
+        "points": 473.2,
+        "tier": "big_stretch"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "roald-dahl-boy-tales-of-childhood",
+      "book": {
+        "key": "roald-dahl-boy-tales-of-childhood",
+        "title": "Boy: Tales of Childhood",
+        "lexile": 1050,
+        "format": "chapter_book",
+        "classification": "standard"
+      },
+      "pages": 219,
+      "audiobook": false,
+      "expected": {
+        "ppp": 1.3,
+        "points": 284.7,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "hobbit",
+      "book": {
+        "key": "hobbit",
+        "title": "The Hobbit",
+        "lexile": 1000,
+        "format": "dense_middle_grade",
+        "classification": "masterpiece"
+      },
+      "pages": 100,
+      "audiobook": false,
+      "synthetic": true,
+      "expected": {
+        "ppp": 4.25,
+        "points": 425.0,
+        "tier": "big_stretch"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "smile",
+      "book": {
+        "key": "smile",
+        "title": "Smile",
+        "lexile": 0,
+        "format": "graphic_novel_telgemeier",
+        "classification": "standard"
+      },
+      "pages": 100,
+      "audiobook": false,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.25,
+        "points": 25.0,
+        "tier": "graphic_novel_telgemeier"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "phantom-tollbooth",
+      "book": {
+        "key": "phantom-tollbooth",
+        "title": "The Phantom Tollbooth",
+        "lexile": 1000,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 100,
+      "audiobook": true,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.81,
+        "points": 81.25,
+        "tier": "big_stretch"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "dog-man",
+      "book": {
+        "key": "dog-man",
+        "title": "Dog Man",
+        "lexile": 0,
+        "format": "graphic_novel",
+        "classification": "standard"
+      },
+      "pages": 100,
+      "audiobook": true,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.05,
+        "points": 5.0,
+        "tier": "graphic_novel"
+      }
+    },
+    {
+      "reader": "alex",
+      "level": "developing",
+      "book_key": "captain-underpants",
+      "book": {
+        "key": "captain-underpants",
+        "title": "Captain Underpants",
+        "lexile": 0,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 100,
+      "audiobook": true,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.1,
+        "points": 10.0,
+        "tier": "override"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "hobbit",
+      "book": {
+        "key": "hobbit",
+        "title": "The Hobbit",
+        "lexile": 1000,
+        "format": "dense_middle_grade",
+        "classification": "masterpiece"
+      },
+      "pages": 100,
+      "audiobook": false,
+      "synthetic": true,
+      "expected": {
+        "ppp": 2.55,
+        "points": 255.0,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "smile",
+      "book": {
+        "key": "smile",
+        "title": "Smile",
+        "lexile": 0,
+        "format": "graphic_novel_telgemeier",
+        "classification": "standard"
+      },
+      "pages": 100,
+      "audiobook": false,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.05,
+        "points": 5.0,
+        "tier": "graphic_novel_telgemeier"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "phantom-tollbooth",
+      "book": {
+        "key": "phantom-tollbooth",
+        "title": "The Phantom Tollbooth",
+        "lexile": 1000,
+        "format": "chapter_book",
+        "classification": "masterpiece"
+      },
+      "pages": 100,
+      "audiobook": true,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.49,
+        "points": 48.75,
+        "tier": "comfort"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "dog-man",
+      "book": {
+        "key": "dog-man",
+        "title": "Dog Man",
+        "lexile": 0,
+        "format": "graphic_novel",
+        "classification": "standard"
+      },
+      "pages": 100,
+      "audiobook": true,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.01,
+        "points": 1.25,
+        "tier": "graphic_novel"
+      }
+    },
+    {
+      "reader": "sam",
+      "level": "capable",
+      "book_key": "captain-underpants",
+      "book": {
+        "key": "captain-underpants",
+        "title": "Captain Underpants",
+        "lexile": 0,
+        "format": "graphic_novel",
+        "classification": "standard",
+        "alex_ppp_override": 0.4,
+        "sam_ppp_override": 0.12
+      },
+      "pages": 100,
+      "audiobook": true,
+      "synthetic": true,
+      "expected": {
+        "ppp": 0.03,
+        "points": 3.0,
+        "tier": "override"
+      }
+    }
+  ]
+}
