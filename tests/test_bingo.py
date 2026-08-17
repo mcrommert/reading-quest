@@ -115,12 +115,68 @@ def test_find_square_matches_id_and_display_text():
     assert bingo.find_square(reader, suffix, card)[0] == sid
 
 
-@pytest.mark.xfail(
-    reason="known gap: cards 3+ silently re-serve card 1 while line_bonus keeps "
-           "doubling. Fixed in 2.0.0 by generating distinct cards past the "
-           "hand-authored ones.",
-    strict=True,
-)
-def test_card_three_is_not_a_duplicate_of_card_one():
+def test_cards_past_the_authored_ones_are_distinct():
+    """Cards 3+ used to silently re-serve card 1 while line_bonus kept doubling —
+    flat difficulty, exponentially growing reward."""
     reader = KNOWN_READERS[0]
-    assert bingo.get_card_squares(reader, 3) != bingo.get_card_squares(reader, 1)
+    card1 = bingo.get_card_squares(reader, 1)
+    card3 = bingo.get_card_squares(reader, 3)
+    card4 = bingo.get_card_squares(reader, 4)
+    assert card3 != card1
+    assert card3 != card4
+    for card, num in ((card3, 3), (card4, 4)):
+        assert len(card) == 25
+        assert len({sid for sid, _ in card}) == 25
+        assert bingo.get_free_square(reader, num) == card[12][0]
+
+
+def test_generated_cards_are_stable_across_calls():
+    """Seeded on (reader, card_num), so a card doesn't reshuffle on restart —
+    otherwise saved square state would point at a grid that no longer exists."""
+    reader = KNOWN_READERS[0]
+    assert bingo.get_card_squares(reader, 3) == bingo.get_card_squares(reader, 3)
+    assert bingo.get_card_squares("someone_else", 3) != bingo.get_card_squares(reader, 3)
+
+
+def test_free_square_is_positional_not_a_name_match():
+    """A user square containing the letters FREE must not hijack the centre."""
+    squares = [(f"X_S{i}", f"square {i}") for i in range(25)]
+    squares[12] = ("X_FREE", "FREE SPACE")
+    squares[3] = ("X_FREEZE_TAG", "Read after freeze tag")
+    validated = bingo.validate_card(squares, "test card")
+    assert validated[bingo.FREE_INDEX][0] == "X_FREE"
+
+
+class TestCardValidation:
+    """Config-defined cards mean the 5x5 assumption must be checked, not trusted."""
+
+    def _card(self):
+        squares = [(f"X_S{i}", f"square {i}") for i in range(25)]
+        squares[12] = ("X_FREE", "FREE SPACE")
+        return squares
+
+    def test_accepts_a_well_formed_card(self):
+        assert len(bingo.validate_card(self._card(), "ok")) == 25
+
+    def test_rejects_wrong_length(self):
+        with pytest.raises(ValueError, match="exactly 25 squares"):
+            bingo.validate_card(self._card()[:24], "short card")
+
+    def test_rejects_duplicate_ids(self):
+        card = self._card()
+        card[5] = card[6]
+        with pytest.raises(ValueError, match="duplicate square IDs"):
+            bingo.validate_card(card, "dupe card")
+
+    def test_rejects_free_square_off_centre(self):
+        card = self._card()
+        card[12] = ("X_S12", "square 12")
+        card[0] = ("X_FREE", "FREE SPACE")
+        with pytest.raises(ValueError, match="FREE square at index 12"):
+            bingo.validate_card(card, "misplaced free")
+
+    def test_rejects_missing_free_square(self):
+        card = self._card()
+        card[12] = ("X_S12", "square 12")
+        with pytest.raises(ValueError, match="FREE square at index 12"):
+            bingo.validate_card(card, "no free")

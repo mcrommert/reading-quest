@@ -9,6 +9,8 @@ any squares already checked in the database stay valid. Three squares were
 relabelled (W_45_MIN, M_60_MIN, M_POETRY) — IDs unchanged.
 """
 
+import random
+
 # (datetime imported locally inside auto_detect where needed)
 
 # ── Card definitions ──────────────────────────────────────────────────────────
@@ -446,32 +448,93 @@ DEFAULT_CARD_TEMPLATE = [
 ]
 
 
-def _generated_card(reader: str) -> list[tuple]:
-    """Build a default card for a reader, with per-reader-prefixed square IDs."""
+# A card is a 5x5 grid, so exactly 25 squares with FREE in the middle. The line
+# map, the board's mini-grid and its CSS all assume this. Cards can now come
+# from user config, so the assumption has to be checked rather than trusted.
+CARD_SIZE = 25
+FREE_INDEX = 12
+
+
+def _is_free_id(square_id: str) -> bool:
+    """Whether a square ID names the free space.
+
+    Exact suffix, never a substring: a user square such as X_FREEZE_TAG contains
+    "FREE" but is an ordinary square, and treating it as the free space would
+    silently break the centre of the grid.
+    """
+    sid = (square_id or "").upper()
+    return sid == "FREE" or sid.endswith("_FREE")
+
+
+def validate_card(squares, origin: str) -> list[tuple]:
+    """Check a card's shape, or raise ValueError naming what's wrong.
+
+    Fails loudly at load rather than rendering a subtly broken board: a card of
+    the wrong length produces lines that can never complete, and a misplaced
+    FREE square breaks the middle row, middle column and both diagonals at once.
+    """
+    squares = list(squares)
+    if len(squares) != CARD_SIZE:
+        raise ValueError(f"{origin}: needs exactly {CARD_SIZE} squares, got {len(squares)}")
+    ids = [s[0] for s in squares]
+    if len(set(ids)) != CARD_SIZE:
+        dupes = sorted({i for i in ids if ids.count(i) > 1})
+        raise ValueError(f"{origin}: duplicate square IDs {dupes}")
+    free_positions = [i for i, sid in enumerate(ids) if _is_free_id(sid)]
+    if free_positions != [FREE_INDEX]:
+        raise ValueError(
+            f"{origin}: expected exactly one FREE square at index {FREE_INDEX}, "
+            f"found {free_positions}"
+        )
+    return squares
+
+
+def _generated_card(reader: str, card_num: int = 1) -> list[tuple]:
+    """Build a default card for a reader with per-reader-prefixed square IDs.
+
+    Cards past the first are shuffled so a reader who works through several
+    doesn't simply replay the same grid while the line bonus keeps doubling.
+    The shuffle is seeded on (reader, card_num) so a given card is stable across
+    restarts, and FREE stays pinned to the centre.
+    """
     prefix = (reader or "R").upper()
-    return [(f"{prefix}_{suffix}", label) for suffix, label in DEFAULT_CARD_TEMPLATE]
+    suffix_prefix = "" if card_num <= 1 else f"{card_num}"
+    squares = [
+        (f"{prefix}{suffix_prefix}_{suffix}", label) for suffix, label in DEFAULT_CARD_TEMPLATE
+    ]
+    if card_num > 1:
+        free = squares[FREE_INDEX]
+        rest = squares[:FREE_INDEX] + squares[FREE_INDEX + 1 :]
+        random.Random(f"{reader}:{card_num}").shuffle(rest)
+        squares = rest[:FREE_INDEX] + [free] + rest[FREE_INDEX:]
+    return validate_card(squares, f"generated card {card_num} for {reader!r}")
 
 
 def get_card_squares(reader: str, card_num: int) -> list[tuple]:
     """Return the square list for a given reader and card number.
 
-    Readers with a hand-authored card (alex/sam) use it verbatim; any
-    other configured reader gets a generated default card so bingo works for
-    new readers out of the box. Manual check/uncheck works immediately;
-    auto-detection is opt-in per reader and simply no-ops for the rest.
+    A reader with a hand-authored card uses it verbatim — that is what keeps
+    existing checked squares valid. Any other reader, and any card number past
+    the hand-authored ones, gets a generated card so bingo works out of the box
+    for a newly added reader and keeps working past card 2.
     """
-    cards = CARDS_BY_NUM.get(card_num, CARDS_BY_NUM[1])
-    if reader in cards:
+    cards = CARDS_BY_NUM.get(card_num)
+    if cards and reader in cards:
         return cards[reader]
-    return _generated_card(reader)
+    return _generated_card(reader, card_num)
 
 
 def get_free_square(reader: str, card_num: int) -> str | None:
-    """Return the free square ID for this card."""
-    for sq_id, _ in get_card_squares(reader, card_num):
-        if "FREE" in sq_id:
-            return sq_id
-    return None
+    """Return the free square ID for this card.
+
+    Positional, not a name match: the centre square *is* the free space, and the
+    board renders index 12 as free regardless of what it is called. Matching on
+    the substring "FREE" would pick up a user's square like FREEZE_TAG.
+    """
+    squares = get_card_squares(reader, card_num)
+    if len(squares) <= FREE_INDEX:
+        return None
+    return squares[FREE_INDEX][0]
 
 
 def line_bonus(card_num: int) -> int:
