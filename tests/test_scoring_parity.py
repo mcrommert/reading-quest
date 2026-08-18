@@ -27,8 +27,17 @@ def test_fixture_is_present_and_broad(parity_cases, catalog):
     assert {c["reader"] for c in parity_cases} == {"alex", "sam"}
     # Every scoring path must be represented, or parity proves less than it looks.
     tiers = {c["expected"]["tier"] for c in parity_cases}
-    for required in ("way_below", "easy", "comfort", "stretch", "big_stretch",
-                     "override", "graphic_novel", "easy_reader", "picture_book"):
+    for required in (
+        "way_below",
+        "easy",
+        "comfort",
+        "stretch",
+        "big_stretch",
+        "override",
+        "graphic_novel",
+        "easy_reader",
+        "picture_book",
+    ):
         assert required in tiers, f"no case exercises the {required!r} path"
     assert any(c["audiobook"] for c in parity_cases), "no audiobook case"
     # Each case carries its own book snapshot, so parity never depends on
@@ -102,7 +111,8 @@ def test_special_formats_resolve_by_level_not_reader_name(catalog):
     thing the whole N-reader refactor rests on.
     """
     book = next(
-        b for b in catalog.values()
+        b
+        for b in catalog.values()
         if b.get("format") == "graphic_novel" and "alex_ppp_override" not in b
     )
     alex = scoring.compute_points(book, "alex", 100)
@@ -126,7 +136,13 @@ def test_tier_boundaries_for_developing(lexile, expected):
 
 @pytest.mark.parametrize(
     "lexile,expected",
-    [(550, "way_below"), (700, "easy"), (1000, "comfort"), (1200, "stretch"), (1400, "big_stretch")],
+    [
+        (550, "way_below"),
+        (700, "easy"),
+        (1000, "comfort"),
+        (1200, "stretch"),
+        (1400, "big_stretch"),
+    ],
 )
 def test_tier_boundaries_for_capable(lexile, expected):
     name, _ = scoring.get_tier(lexile, "sam")

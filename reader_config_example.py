@@ -12,6 +12,8 @@ Each reader:
   monogram   1-2 letters for the board avatar
   age, grade cosmetic, shown on the board
   level      which ladder in readers.LEVELS scores this reader's books
+  card       (optional) named bingo card set from bingo.CARD_SETS
+             ("younger" / "older"). Omit for a generated card.
   aliases    extra words that resolve to this reader (case-insensitive)
   warn_upper_grade  (optional) flag UG / 9+ books for a parent preview
 """
@@ -25,6 +27,7 @@ READERS = [
         "grade": "2nd grade",
         "level": "developing",
         "aliases": ["a"],
+        "card": "younger",
     },
     {
         "key": "sam",
@@ -34,6 +37,7 @@ READERS = [
         "grade": "5th grade",
         "level": "capable",
         "aliases": ["s"],
+        "card": "older",
         "warn_upper_grade": True,
     },
 ]

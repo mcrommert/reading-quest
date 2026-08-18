@@ -27,11 +27,27 @@ FIXTURES = Path(__file__).parent / "fixtures"
 # The roster the parity fixture was captured against: two readers, one on each
 # of the two levels that reproduce the original hand-tuned tier tables.
 TEST_READERS = [
-    {"key": "alex", "name": "Alex", "monogram": "A", "age": 7,
-     "grade": "2nd grade", "level": "developing", "aliases": ["a"]},
-    {"key": "sam", "name": "Sam", "monogram": "S", "age": 10,
-     "grade": "5th grade", "level": "capable", "aliases": ["s"],
-     "warn_upper_grade": True},
+    {
+        "key": "alex",
+        "name": "Alex",
+        "monogram": "A",
+        "age": 7,
+        "grade": "2nd grade",
+        "level": "developing",
+        "aliases": ["a"],
+        "card": "younger",
+    },
+    {
+        "key": "sam",
+        "name": "Sam",
+        "monogram": "S",
+        "age": 10,
+        "grade": "5th grade",
+        "level": "capable",
+        "aliases": ["s"],
+        "warn_upper_grade": True,
+        "card": "older",
+    },
 ]
 
 
