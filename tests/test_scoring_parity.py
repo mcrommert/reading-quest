@@ -95,13 +95,71 @@ def test_audiobook_quarters_the_points(catalog):
 
 
 def test_per_book_override_beats_every_other_path(catalog):
-    """A `{reader}_ppp_override` bypasses tiers, bonus and density entirely."""
-    key = next(k for k, b in catalog.items() if "alex_ppp_override" in b)
-    book = catalog[key]
+    """An explicit override bypasses tiers, bonus and density entirely."""
+    book = next(b for b in catalog.values() if "ppp_override_by_level" in b)
+    expected = book["ppp_override_by_level"]["developing"]
     got = scoring.compute_points(book, "alex", 100, audiobook=False)
     assert got["tier"] == "override"
-    assert got["ppp"] == float(book["alex_ppp_override"])
-    assert got["points"] == 100 * float(book["alex_ppp_override"])
+    assert got["ppp"] == float(expected)
+    assert got["points"] == 100 * float(expected)
+
+
+def test_overrides_are_keyed_by_level_so_any_reader_resolves_them(catalog, monkeypatch):
+    """The migration case: production readers aren't named alex/sam.
+
+    Overrides used to be keyed on the reader's own key, so a family whose
+    children are not the sample readers silently lost every hand-set value —
+    illustrated-novel hybrids would fall back to the generic format rate at
+    roughly half the intended score, with nothing visible to say so.
+    """
+    import readers
+
+    monkeypatch.setattr(
+        readers,
+        "READERS_BY_KEY",
+        {
+            "wilhelmina": {"key": "wilhelmina", "level": "developing"},
+            "mackenzie": {"key": "mackenzie", "level": "capable"},
+        },
+        raising=False,
+    )
+    book = next(b for b in catalog.values() if "ppp_override_by_level" in b)
+    by_level = book["ppp_override_by_level"]
+
+    assert scoring.compute_points(book, "wilhelmina", 100)["ppp"] == by_level["developing"]
+    assert scoring.compute_points(book, "mackenzie", 100)["ppp"] == by_level["capable"]
+
+
+def test_legacy_reader_keyed_override_still_works():
+    """Forks of books.json carry the old shape; breaking it would silently
+    change their scoring, so the fallback stays."""
+    book = {"title": "Legacy", "format": "graphic_novel", "alex_ppp_override": 0.7}
+    got = scoring.compute_points(book, "alex", 100)
+    assert got["tier"] == "override"
+    assert got["ppp"] == 0.7
+
+
+def test_level_keyed_override_wins_over_the_legacy_key():
+    book = {
+        "title": "Both",
+        "format": "graphic_novel",
+        "alex_ppp_override": 0.7,
+        "ppp_override_by_level": {"developing": 0.3},
+    }
+    assert scoring.compute_points(book, "alex", 100)["ppp"] == 0.3
+
+
+def test_a_level_with_no_override_falls_through_to_normal_scoring(catalog):
+    """An override set only for one level must not leak to readers at another."""
+    book = {
+        "title": "Partial",
+        "format": "chapter_book",
+        "lexile": 500,
+        "classification": "standard",
+        "ppp_override_by_level": {"developing": 0.3},
+    }
+    assert scoring.compute_points(book, "alex", 100)["tier"] == "override"
+    assert scoring.compute_points(book, "sam", 100)["tier"] != "override"
 
 
 def test_special_formats_resolve_by_level_not_reader_name(catalog):

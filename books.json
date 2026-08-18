@@ -1671,8 +1671,10 @@
    "underpants",
    "captain underpants series"
   ],
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "amulet",
@@ -16431,8 +16433,10 @@
    "the third epic novel by george beard and harold hutchins the creators of captain underpants",
    "third epic novel by george beard and harold hutchins the creators of captain underpants"
   ],
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "fudge-superfudge",
@@ -16502,8 +16506,10 @@
    "the all new",
    "the all new captain underpants extra crunchy book o fun 2"
   ],
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "amazing-stardust-friends-step-into-the-spotlight",
@@ -16626,8 +16632,10 @@
    "the captain underpants",
    "the captain underpants extra crunchy book o fun"
   ],
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "chicken-squad-the-chicken-squad",
@@ -18492,8 +18500,10 @@
    "wicked wedgie woman",
    "wrath of the wicked wedgie woman"
   ],
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "chamber-of-horrors-spirits-and-spells",
@@ -39246,8 +39256,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "adventures of captain underpants",
    "captain underpants #1",
@@ -39255,7 +39263,11 @@
    "captain underpants book 1",
    "first epic novel",
    "the adventures of captain underpants"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-2-captain-underpants-and-the-attack-of-the-talk",
@@ -39263,8 +39275,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "attack of the talking toilets",
    "captain underpants #2",
@@ -39272,7 +39282,11 @@
    "captain underpants and the attack of the talking toilets",
    "second epic novel",
    "talking toilets"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-3-captain-underpants-and-the-invasion-of-the-in",
@@ -39280,8 +39294,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "cafeteria ladies",
    "captain underpants #3",
@@ -39290,7 +39302,11 @@
    "invasion of the incredibly naughty cafeteria ladies from outer space",
    "naughty cafeteria ladies",
    "third epic novel"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-4-captain-underpants-and-the-perilous-plot-of-p",
@@ -39298,8 +39314,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "captain underpants #4",
    "captain underpants 4",
@@ -39308,7 +39322,11 @@
    "perilous plot of professor poopypants",
    "poopypants",
    "professor poopypants"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-6-captain-underpants-and-the-big-bad-battle-of-",
@@ -39316,8 +39334,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "bionic booger boy 1",
    "bionic booger boy part 1",
@@ -39326,7 +39342,11 @@
    "captain underpants and the big bad battle of the bionic booger boy part 1 the night of the nasty nostril nuggets",
    "nasty nostril nuggets",
    "night of the nasty nostril nuggets"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-7-captain-underpants-and-the-big-bad-battle-of-",
@@ -39334,8 +39354,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "bionic booger boy 2",
    "bionic booger boy part 2",
@@ -39344,7 +39362,11 @@
    "captain underpants and the big bad battle of the bionic booger boy part 2 the revenge of the ridiculous robo boogers",
    "revenge of the ridiculous robo boogers",
    "robo boogers"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-8-captain-underpants-and-the-preposterous-pligh",
@@ -39352,8 +39374,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "captain underpants #8",
    "captain underpants 8",
@@ -39361,7 +39381,11 @@
    "preposterous plight of the purple potty people",
    "purple potty",
    "purple potty people"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-9-captain-underpants-and-the-terrifying-return-",
@@ -39369,15 +39393,17 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "captain underpants #9",
    "captain underpants 9",
    "captain underpants and the terrifying return of tippy tinkletrousers",
    "terrifying return of tippy tinkletrousers",
    "tippy tinkletrousers"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-10-captain-underpants-and-the-revolting-revenge-",
@@ -39385,8 +39411,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "captain underpants #10",
    "captain underpants 10",
@@ -39394,7 +39418,11 @@
    "radioactive robo boxers",
    "revolting revenge of the radioactive robo boxers",
    "robo boxers"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-11-captain-underpants-and-the-tyrannical-retalia",
@@ -39402,8 +39430,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "captain underpants #11",
    "captain underpants 11",
@@ -39411,7 +39437,11 @@
    "turbo toilet",
    "turbo toilet 2000",
    "tyrannical retaliation of the turbo toilet 2000"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "captain-underpants-12-captain-underpants-and-the-sensational-saga-o",
@@ -39419,8 +39449,6 @@
   "lexile": 720,
   "format": "graphic_novel",
   "classification": "standard",
-  "alex_ppp_override": 0.4,
-  "sam_ppp_override": 0.12,
   "aliases": [
    "captain underpants #12",
    "captain underpants 12",
@@ -39428,7 +39456,11 @@
    "sensational saga of sir stinks a lot",
    "sir stinks a lot",
    "stinks a lot"
-  ]
+  ],
+  "ppp_override_by_level": {
+   "developing": 0.4,
+   "capable": 0.12
+  }
  },
  {
   "key": "1-2-3-juggle-with-me-a-counting-book",

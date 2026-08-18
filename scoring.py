@@ -104,6 +104,27 @@ def get_density(book: dict) -> float:
 AUDIOBOOK_FACTOR = 0.25
 
 
+def ppp_override_for(book: dict, reader: str):
+    """A book's explicit points-per-page for this reader, or None.
+
+    Keyed by reading *level*, mirroring SPECIAL_OVERRIDES, so an override written
+    once applies to any reader at that level. Some books need a hand-set value
+    that the tier maths can't express — illustrated-novel hybrids like Captain
+    Underpants have fast, low-density pages that a Lexile-driven score inflates.
+
+    `{reader}_ppp_override` is still honoured as a fallback. books.json is
+    thousands of entries and anyone who forked it will have the old shape, so
+    breaking it would silently change their scoring.
+    """
+    by_level = book.get("ppp_override_by_level")
+    if by_level:
+        value = by_level.get(level_for(reader))
+        if value is not None:
+            return float(value)
+    legacy = book.get(f"{reader}_ppp_override")
+    return float(legacy) if legacy is not None else None
+
+
 def compute_points(book: dict, reader: str, pages: int, audiobook: bool = False) -> dict:
     """Returns full scoring breakdown dict.
 
@@ -111,8 +132,8 @@ def compute_points(book: dict, reader: str, pages: int, audiobook: bool = False)
     AUDIOBOOK_FACTOR (¼) — page/minute stats elsewhere are unaffected.
     """
     fmt = book.get("format", "chapter_book")
-    # Per-reader explicit ppp override (bypasses tiers and density)
-    override = book.get(f"{reader}_ppp_override")
+    # Explicit ppp override (bypasses tiers and density)
+    override = ppp_override_for(book, reader)
     if override is not None:
         ppp = float(override)
         result = {

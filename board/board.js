@@ -344,27 +344,28 @@
   }
 
   // ----- bingo mini-grid ------------------------------------------------
-  function renderBingo(playerEl, p) {
+  function renderBingo(playerEl, p, geometry) {
     const grid = playerEl.querySelector('[data-bingo-grid]');
     if (grid && p.bingo) {
       const checked = new Set(p.bingo.squares_checked || []);
+      // Card geometry comes from /board.json rather than a copy kept here.
+      // Keeping a second copy of the line map in JS meant it could silently
+      // disagree with the server's once cards became configurable.
+      const geo = geometry || {};
+      const size = geo.size || 25;
+      const freeIndex = geo.free_index === undefined ? 12 : geo.free_index;
+      const lines = geo.lines || [];
+
       // Which positions are part of an awarded line?
-      const LINES = [
-        [0,1,2,3,4], [5,6,7,8,9], [10,11,12,13,14],
-        [15,16,17,18,19], [20,21,22,23,24],
-        [0,5,10,15,20], [1,6,11,16,21], [2,7,12,17,22],
-        [3,8,13,18,23], [4,9,14,19,24],
-        [0,6,12,18,24], [4,8,12,16,20]
-      ];
       const inLine = new Set();
-      (p.bingo.lines || []).forEach(li => LINES[li].forEach(i => inLine.add(i)));
+      (p.bingo.lines || []).forEach(li => (lines[li] || []).forEach(i => inLine.add(i)));
 
       let html = '';
-      for (let i = 0; i < 25; i++) {
+      for (let i = 0; i < size; i++) {
         const cls =
-          (checked.has(i) ? ' checked' : '') +
-          (inLine.has(i)  ? ' line'    : '') +
-          (i === 12       ? ' free'    : '');
+          (checked.has(i)   ? ' checked' : '') +
+          (inLine.has(i)    ? ' line'    : '') +
+          (i === freeIndex  ? ' free'    : '');
         html += `<span class="bingo-cell${cls}"></span>`;
       }
       grid.innerHTML = html;
@@ -428,7 +429,7 @@
         renderQuestLegend(root, p, milestonePts);
         renderToday(root, p);
         renderWeek(root, p);
-        renderBingo(root, p);
+        renderBingo(root, p, data.bingo);
         renderRecent(root, p);
       });
     }

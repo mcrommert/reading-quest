@@ -3,7 +3,7 @@
 A summer-reading game for families. Log what your kids read, score it by
 book difficulty (Lexile) relative to *each reader's* level, and show it all on
 a live game board with per-reader progress, a family points goal, streaks, and
-a bingo card. Optional Mattermost slash commands, an Alexa skill, and Google
+a bingo card. Optional Mattermost slash commands and Google
 Calendar sync.
 
 It started as a two-kid household project and is built so **adding a reader is
@@ -106,16 +106,58 @@ data never gets committed):
 ```python
 READERS = [
     {"key": "alex", "name": "Alex", "monogram": "A", "age": 7,
-     "grade": "2nd grade", "level": "developing", "aliases": ["a"]},
+     "grade": "2nd grade", "level": "developing", "aliases": ["a"],
+     "card": "younger"},
     {"key": "sam",  "name": "Sam",  "monogram": "S", "age": 10,
      "grade": "5th grade", "level": "capable", "aliases": ["s"],
-     "warn_upper_grade": True},
+     "warn_upper_grade": True, "card": "older"},
 ]
 ```
 
 Each reader gets scoring, name resolution (key / name / aliases), a bingo card,
-board presence, and a share of the family goal automatically. Readers without a
-hand-authored bingo card get one generated from a default template.
+board presence, and a share of the family goal automatically.
+
+**Bingo cards.** `"card"` picks a shipped set — `"younger"` or `"older"`, named
+for a reading stage rather than a particular child, so any reader can use either.
+Omit it and the reader gets a card generated from a default template, which works
+immediately for manual checking but auto-detects nothing. To write your own
+squares, supply them inline instead:
+
+```python
+{"key": "kim", "level": "growing", "cards": {1: [
+    ("KIM_PILLOW_FORT", "Read in a pillow fort"),
+    # ... exactly 25 squares, with FREE at index 12 (the centre) ...
+    ("KIM_BIG_DAY", "Read 100 pages in one day",
+     {"daily_pages": {"gte": 100}, "prose_only": True,
+      "reason": "Read {daily_pages} pages today"}),
+]}}
+```
+
+A square is `(id, label)`, optionally with a third element describing when it
+auto-checks. Conditions are ANDed; `prose_only` excludes illustrated formats from
+page milestones. Available conditions: `daily_pages`, `session_pages`,
+`book_total_pages`, `books_finished_week`, `books_finished_total` and
+`days_to_finish` (each taking `gte` / `lte`), plus `finished`, `finished_format`,
+`finished_genre`, `finished_classification` and `finished_award`. An unrecognised
+condition raises rather than silently never firing.
+
+Square IDs are the storage key for checked squares, so renaming one abandons its
+saved state. Cards are validated on load: exactly 25 squares, unique IDs, one
+FREE at the centre.
+
+### Upgrading from 1.x
+
+Two breaking changes:
+
+- Readers need a `"card"` key to keep a hand-authored bingo card. Without one
+  they fall back to a generated card and previously checked squares no longer
+  appear on their grid. The app logs a warning naming the reader.
+- Per-book point overrides in `books.json` moved from `{reader}_ppp_override` to
+  `"ppp_override_by_level": {"developing": 0.4}`, so an override written once
+  applies to any reader at that level instead of only to a reader with that exact
+  key. The old form is still read as a fallback.
+
+The `/alexa` endpoint has been removed.
 
 ## Endpoints
 
@@ -127,7 +169,6 @@ hand-authored bingo card get one generated from a default template.
 | `/library/` | Books-read library |
 | `/board.json`, `/library.json` | Raw data |
 | `/slash/read`, `/slash/reading`, `/slash/book`, `/slash/bingo` | Mattermost slash commands (optional) |
-| `/alexa` | Alexa skill endpoint (optional, set `ALEXA_SKILL_ID`) |
 
 ## Logging reading
 
@@ -140,7 +181,7 @@ same shorthand for power users:
 alex "Frog and Toad Are Friends" pages=30 finished
 ```
 
-Mattermost slash commands and the Alexa skill are **optional** extra input
+Mattermost slash commands are an **optional** extra input
 paths — everything works from the browser with nothing else installed. Set
 `LOG_PIN` to require a PIN before logging (recommended if the app is reachable
 from outside your home network).

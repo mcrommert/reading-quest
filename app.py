@@ -58,10 +58,6 @@ SLASH_TOKEN_BOOK = os.environ.get("SLASH_TOKEN_BOOK", "")
 
 SLASH_TOKEN_BINGO = os.environ.get("SLASH_TOKEN_BINGO", "")
 
-# Set ALEXA_SKILL_ID in the environment to enable the Alexa skill. Empty by
-# default so the /alexa endpoint is effectively disabled until a deployment
-# configures its own skill (no household-specific ID shipped in the repo).
-ALEXA_SKILL_ID = os.environ.get("ALEXA_SKILL_ID", "")
 
 TZ_LOCAL = os.environ.get("TZ_LOCAL", "America/New_York")
 
@@ -567,7 +563,7 @@ def _build_player(p_cfg: dict, today: date, book_idx: dict, stats_from: str = No
     bingo_squares = bingo_mod.get_card_squares(key, bingo_card_num)
     bingo_checked = db.bingo_get_checked(key)
     bingo_awarded = db.bingo_get_lines_awarded(key)
-    squares_checked_idx = [i for i, (sid, _) in enumerate(bingo_squares) if sid in bingo_checked]
+    squares_checked_idx = [i for i, sq in enumerate(bingo_squares) if sq[0] in bingo_checked]
     bingo_lines_idx = []
     for i, line in enumerate(bingo_mod.BINGO_LINES):
         line_id = f"line_{i}"
@@ -648,6 +644,14 @@ def _build_board_payload() -> dict:
             **{k: float(per_reader[k]) for k in READER_KEYS},
         },
         "milestones": [{"pts": p, "label": l} for p, l in zip(MILESTONE_PTS, MILESTONE_LABELS)],
+        # Card geometry travels with the data so the board doesn't carry its own
+        # copy of the line map. Two copies of a constant cannot stay in step once
+        # cards are definable in config.
+        "bingo": {
+            "size": bingo_mod.CARD_SIZE,
+            "free_index": bingo_mod.FREE_INDEX,
+            "lines": bingo_mod.BINGO_LINES,
+        },
         "players": players,
     }
 
@@ -1510,7 +1514,7 @@ async def slash_bingo(request: Request):
         rows = []
         for i in range(0, 25, 5):
             row = []
-            for sid, label in squares[i : i + 5]:
+            for sid, label, _trigger in squares[i : i + 5]:
                 mark = "✅" if sid in checked else "⬜"
                 row.append(f"{mark} {label[:20]}")
             rows.append("  ".join(row))
@@ -1529,7 +1533,7 @@ async def slash_bingo(request: Request):
         squares = bingo_mod.get_card_squares(reader, card_num)
         card_label = f" (Card {card_num})" if card_num > 1 else ""
         lines = [f"**{reader.capitalize()} bingo audit{card_label}:**"]
-        for sid, label in squares:
+        for sid, label, _trigger in squares:
             s = state.get(sid)
             if s and s.get("checked"):
                 ts = (s.get("checked_at") or "")[:16].replace("T", " ")
@@ -1573,148 +1577,3 @@ async def slash_bingo(request: Request):
     out_lines = [f"✅ Checked **{label}** for {reader.capitalize()}!"]
     _award_bingo_lines(reader, out_lines, card_num=db.get_bingo_card_num(reader))
     return _in_channel("\n".join(out_lines))
-
-
-# ===========================================================================
-# /alexa  — Alexa Custom Skill endpoint
-# ===========================================================================
-
-
-def _alexa_response(text: str, end_session: bool = True):
-    return JSONResponse(
-        {
-            "version": "1.0",
-            "response": {
-                "outputSpeech": {"type": "PlainText", "text": text},
-                "shouldEndSession": end_session,
-            },
-        }
-    )
-
-
-def _alexa_slot(slots: dict, name: str) -> str | None:
-    slot = slots.get(name) or {}
-    # Prefer resolved value for custom slot types
-    for authority in (slot.get("resolutions") or {}).get("resolutionsPerAuthority", []):
-        if (authority.get("status") or {}).get("code") == "ER_SUCCESS_MATCH":
-            values = authority.get("values", [])
-            if values:
-                return values[0]["value"]["name"]
-    return slot.get("value") or None
-
-
-@app.post("/alexa")
-async def alexa_skill(request: Request):
-    # Alexa is opt-in: with no skill ID configured, the endpoint is disabled.
-    if not ALEXA_SKILL_ID:
-        return JSONResponse({"error": "alexa not configured"}, status_code=403)
-    body = await request.json()
-    app_id = (
-        (body.get("context") or {}).get("System", {}).get("application", {}).get("applicationId")
-    )
-    if app_id != ALEXA_SKILL_ID:
-        return JSONResponse({"error": "forbidden"}, status_code=403)
-    req = body.get("request", {})
-    req_type = req.get("type", "")
-    if req_type == "LaunchRequest":
-        return _alexa_response(
-            "Welcome to Reading Bot! Say something like: " "Alex read 30 pages of Dog Man.",
-            end_session=False,
-        )
-    if req_type == "SessionEndedRequest":
-        return JSONResponse({"version": "1.0", "response": {}})
-    if req_type != "IntentRequest":
-        return JSONResponse({"version": "1.0", "response": {}})
-    intent = req.get("intent", {})
-    intent_name = intent.get("name", "")
-    if intent_name in ("AMAZON.CancelIntent", "AMAZON.StopIntent"):
-        return _alexa_response("Goodbye!")
-    if intent_name == "AMAZON.HelpIntent":
-        return _alexa_response(
-            "To log reading, say: Alex read 30 pages of Dog Man. "
-            "You can also say 'finished' at the end if the book is done. "
-            "Replace Alex with Sam for the other reader.",
-            end_session=False,
-        )
-    if intent_name != "LogReadingIntent":
-        return _alexa_response(
-            "Sorry, I didn't understand that. Try saying: Alex read 30 pages of Dog Man."
-        )
-    slots = intent.get("slots", {})
-    reader_raw = _alexa_slot(slots, "reader")
-    book_raw = _alexa_slot(slots, "book")
-    pages_raw = _alexa_slot(slots, "pages")
-    mins_raw = _alexa_slot(slots, "minutes")
-    fin_raw = _alexa_slot(slots, "finished")
-    reader = resolve_reader(reader_raw)
-    if not reader:
-        return _alexa_response(
-            "Sorry, I need to know who's reading. Say Alex or Sam.",
-            end_session=False,
-        )
-    if not book_raw:
-        return _alexa_response(
-            f"What book did {reader.capitalize()} read?",
-            end_session=False,
-        )
-    try:
-        pages = int(pages_raw)
-        if pages <= 0:
-            raise ValueError
-    except (TypeError, ValueError):
-        return _alexa_response(
-            f"How many pages did {reader.capitalize()} read? Try saying a number.",
-            end_session=False,
-        )
-    if pages > MAX_PAGES:
-        return _alexa_response(
-            f"That's more than {MAX_PAGES} pages — try logging it in smaller sessions.",
-            end_session=False,
-        )
-    try:
-        minutes = int(mins_raw) if mins_raw else 0
-    except (TypeError, ValueError):
-        minutes = 0
-    finished = (fin_raw or "").lower() in ("yes", "true", "finished", "done")
-    book, _ = find_book(book_raw)
-    if book is None:
-        key = re.sub(r"\s+", "-", normalize(book_raw))[:40]
-        title = book_raw.strip()
-        db.add_custom_book(key, title, None, "chapter_book", "standard", [normalize(title)])
-        book = {
-            "key": key,
-            "title": title,
-            "lexile": 0,
-            "format": "chapter_book",
-            "classification": "standard",
-        }
-    result = scoring.compute_points(book, reader, pages)
-    ppp = result["ppp"]
-    points = result["points"]
-    today_local = _today()
-    prev_total = db.get_total_stats(reader)["pts"]
-    db.log_session(
-        reader,
-        book["key"],
-        book["title"],
-        pages,
-        minutes,
-        ppp,
-        points,
-        finished=finished,
-        session_date=today_local.isoformat(),
-    )
-    total = db.get_total_stats(reader)["pts"]
-    milestone_msgs = check_milestones(reader, prev_total, total)
-    for msg in milestone_msgs:
-        gcal.post_milestone(reader, msg, total, today_local)
-    _process_bingo(reader, pages, minutes, book, finished, book["key"], today_local.isoformat())
-    _post_realtime_summaries(reader, today_local)
-    finish_phrase = " You finished the book!" if finished else ""
-    milestone_phrase = f" {reader.capitalize()} hit a milestone!" if milestone_msgs else ""
-    spoken = (
-        f"Logged! {reader.capitalize()} read {pages} pages of {book['title']} "
-        f"and earned {fmt_pts(points)} points.{finish_phrase}"
-        f" Total is now {fmt_pts(total)} points.{milestone_phrase}"
-    )
-    return _alexa_response(spoken)
