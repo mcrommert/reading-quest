@@ -35038,7 +35038,7 @@
   "title": "Magic Tree House #1: Dinosaurs Before Dark",
   "lexile": 380,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #1",
    "magic tree house 1",
@@ -35052,7 +35052,7 @@
   "title": "Magic Tree House #2: The Knight at Dawn",
   "lexile": 380,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #2",
    "magic tree house 2",
@@ -35067,7 +35067,7 @@
   "title": "Magic Tree House #3: Mummies in the Morning",
   "lexile": 390,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #3",
    "magic tree house 3",
@@ -35081,7 +35081,7 @@
   "title": "Magic Tree House #4: Pirates Past Noon",
   "lexile": 490,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #4",
    "magic tree house 4",
@@ -35095,7 +35095,7 @@
   "title": "Magic Tree House #6: Afternoon on the Amazon",
   "lexile": 430,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #6",
    "magic tree house 6",
@@ -35109,7 +35109,7 @@
   "title": "Magic Tree House #8: Midnight on the Moon",
   "lexile": 490,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #8",
    "magic tree house 8",
@@ -35123,7 +35123,7 @@
   "title": "Magic Tree House #9: Dolphins at Daybreak",
   "lexile": 430,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #9",
    "magic tree house 9",
@@ -35137,7 +35137,7 @@
   "title": "Magic Tree House #18: Buffalo Before Breakfast",
   "lexile": 390,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #18",
    "magic tree house 18",
@@ -35151,7 +35151,7 @@
   "title": "Magic Tree House #19: Tigers at Twilight",
   "lexile": 430,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #19",
    "magic tree house 19",
@@ -35165,7 +35165,7 @@
   "title": "Magic Tree House #21: Civil War on Sunday",
   "lexile": 500,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #21",
    "magic tree house 21",
@@ -35179,7 +35179,7 @@
   "title": "Magic Tree House #23: Twister on Tuesday",
   "lexile": 470,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #23",
    "magic tree house 23",
@@ -35193,7 +35193,7 @@
   "title": "Magic Tree House #24: Earthquake in the Early Morning",
   "lexile": 480,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #24",
    "magic tree house 24",
@@ -35207,7 +35207,7 @@
   "title": "Magic Tree House #25: Stage Fright on a Summer Night",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #25",
    "magic tree house 25",
@@ -35221,7 +35221,7 @@
   "title": "Magic Tree House #26: Good Morning, Gorillas",
   "lexile": 450,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #26",
    "magic tree house 26",
@@ -35235,7 +35235,7 @@
   "title": "Magic Tree House #27: Thanksgiving on Thursday",
   "lexile": 430,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #27",
    "magic tree house 27",
@@ -35249,7 +35249,7 @@
   "title": "Magic Tree House #28: High Tide in Hawaii",
   "lexile": 500,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house #28",
    "magic tree house 28",
@@ -35263,7 +35263,7 @@
   "title": "Magic Tree House Merlin Mission #1: Christmas in Camelot",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 1",
    "christmas in camelot",
@@ -35276,7 +35276,7 @@
   "title": "Magic Tree House Merlin Mission #2: Haunted Castle on Hallows Eve",
   "lexile": 530,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 2",
    "haunted castle on hallows eve",
@@ -35289,7 +35289,7 @@
   "title": "Magic Tree House Merlin Mission #3: Summer of the Sea Serpent",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 3",
    "summer of the sea serpent",
@@ -35302,7 +35302,7 @@
   "title": "Magic Tree House Merlin Mission #4: Winter of the Ice Wizard",
   "lexile": 520,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 4",
    "winter of the ice wizard",
@@ -35315,7 +35315,7 @@
   "title": "Magic Tree House Merlin Mission #5: Carnival at Candlelight",
   "lexile": 590,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 5",
    "carnival at candlelight",
@@ -35328,7 +35328,7 @@
   "title": "Magic Tree House Merlin Mission #6: Season of the Sandstorms",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 6",
    "season of the sandstorms",
@@ -35341,7 +35341,7 @@
   "title": "Magic Tree House Merlin Mission #7: Night of the New Magicians",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 7",
    "night of the new magicians",
@@ -35354,7 +35354,7 @@
   "title": "Magic Tree House Merlin Mission #8: Blizzard of the Blue Moon",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 8",
    "blizzard of the blue moon",
@@ -35367,7 +35367,7 @@
   "title": "Magic Tree House Merlin Mission #9: Dragon of the Red Dawn",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 9",
    "dragon of the red dawn",
@@ -35380,7 +35380,7 @@
   "title": "Magic Tree House Merlin Mission #10: Monday with a Mad Genius",
   "lexile": 540,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 10",
    "monday with a mad genius",
@@ -35393,7 +35393,7 @@
   "title": "Magic Tree House Merlin Mission #11: Dark Day in the Deep Sea",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 11",
    "dark day in the deep sea",
@@ -35406,7 +35406,7 @@
   "title": "Magic Tree House Merlin Mission #12: Eve of the Emperor Penguin",
   "lexile": 540,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 12",
    "eve of the emperor penguin",
@@ -35419,7 +35419,7 @@
   "title": "Magic Tree House Merlin Mission #13: Moonlight on the Magic Flute",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 13",
    "moonlight on the magic flute",
@@ -35432,7 +35432,7 @@
   "title": "Magic Tree House Merlin Mission #14: A Good Night for Ghosts",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 14",
    "a good night for ghosts",
@@ -35446,7 +35446,7 @@
   "title": "Magic Tree House Merlin Mission #15: Leprechaun in Late Winter",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 15",
    "leprechaun in late winter",
@@ -35459,7 +35459,7 @@
   "title": "Magic Tree House Merlin Mission #16: A Ghost Tale for Christmas Time",
   "lexile": 530,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 16",
    "a ghost tale for christmas time",
@@ -35473,7 +35473,7 @@
   "title": "Magic Tree House Merlin Mission #17: A Crazy Day with Cobras",
   "lexile": 530,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 17",
    "a crazy day with cobras",
@@ -35487,7 +35487,7 @@
   "title": "Magic Tree House Merlin Mission #18: Dogs in the Dead of Night",
   "lexile": 530,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 18",
    "dogs in the dead of night",
@@ -35500,7 +35500,7 @@
   "title": "Magic Tree House Merlin Mission #19: Abe Lincoln at Last!",
   "lexile": 540,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 19",
    "abe lincoln at last",
@@ -35513,7 +35513,7 @@
   "title": "Magic Tree House Merlin Mission #20: A Perfect Time for Pandas",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 20",
    "a perfect time for pandas",
@@ -35527,7 +35527,7 @@
   "title": "Magic Tree House Merlin Mission #21: Stallion by Starlight",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 21",
    "stallion by starlight",
@@ -35540,7 +35540,7 @@
   "title": "Magic Tree House Merlin Mission #22: Hurry Up, Houdini!",
   "lexile": 540,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 22",
    "hurry up houdini",
@@ -35553,7 +35553,7 @@
   "title": "Magic Tree House Merlin Mission #23: High Time for Heroes",
   "lexile": 560,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 23",
    "high time for heroes",
@@ -35566,7 +35566,7 @@
   "title": "Magic Tree House Merlin Mission #24: Soccer on Sunday",
   "lexile": 550,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 24",
    "soccer on sunday",
@@ -35579,7 +35579,7 @@
   "title": "Magic Tree House Merlin Mission #25: Shadow of the Shark",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 25",
    "shadow of the shark",
@@ -35592,7 +35592,7 @@
   "title": "Magic Tree House Merlin Mission #26: Balto of the Blue Dawn",
   "lexile": 540,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 26",
    "balto of the blue dawn",
@@ -35605,7 +35605,7 @@
   "title": "Magic Tree House Merlin Mission #27: Night of the Ninth Dragon",
   "lexile": 570,
   "format": "chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "merlin mission 27",
    "night of the ninth dragon",
@@ -35618,7 +35618,7 @@
   "title": "Magic Tree House #29: A Big Day for Baseball",
   "lexile": 520,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 29",
    "mth 29",
@@ -35631,7 +35631,7 @@
   "title": "Magic Tree House #30: Hurricane Heroes in Texas",
   "lexile": 520,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 30",
    "mth 30",
@@ -35643,7 +35643,7 @@
   "title": "Magic Tree House #31: Warriors in Winter",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 31",
    "mth 31",
@@ -35655,7 +35655,7 @@
   "title": "Magic Tree House #32: To the Future, Ben Franklin!",
   "lexile": 520,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 32",
    "mth 32",
@@ -35667,7 +35667,7 @@
   "title": "Magic Tree House #33: Narwhal on a Sunny Night",
   "lexile": 500,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 33",
    "mth 33",
@@ -35679,7 +35679,7 @@
   "title": "Magic Tree House #34: Late Lunch with Llamas",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 34",
    "mth 34",
@@ -35691,7 +35691,7 @@
   "title": "Magic Tree House #35: Camp Time in California",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 35",
    "mth 35",
@@ -35703,7 +35703,7 @@
   "title": "Magic Tree House #36: Sunlight on the Snow Leopard",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 36",
    "mth 36",
@@ -35715,7 +35715,7 @@
   "title": "Magic Tree House #37: Rhinos at Recess",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 37",
    "mth 37",
@@ -35727,7 +35727,7 @@
   "title": "Magic Tree House #38: Time of the Turtle King",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 38",
    "mth 38",
@@ -35739,7 +35739,7 @@
   "title": "Magic Tree House #39: Windy Night with Wild Horses",
   "lexile": 510,
   "format": "early_chapter_book",
-  "classification": "fiction",
+  "classification": "standard",
   "aliases": [
    "magic tree house 39",
    "mth 39",

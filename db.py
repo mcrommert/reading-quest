@@ -2,7 +2,7 @@
 
 import sqlite3, os, json
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 DB_PATH = os.environ.get("DB_PATH", "/data/reading.db")
 
@@ -10,6 +10,19 @@ DB_PATH = os.environ.get("DB_PATH", "/data/reading.db")
 # roll over cleanly (archive/compare across summers). Existing rows backfill to
 # the default via the ADD COLUMN default below.
 CURRENT_SEASON = os.environ.get("CURRENT_SEASON", "2026-summer")
+
+
+def _utc_now() -> datetime:
+    """Current UTC time as a naive datetime.
+
+    datetime.utcnow() is deprecated and slated for removal, but its replacement
+    returns an aware datetime whose isoformat() carries a "+00:00" suffix. These
+    timestamps are stored as strings and compared lexicographically (the dedup
+    guard does `logged_at >= cutoff`), so changing the format would make new rows
+    sort inconsistently against every row already in the database. Stripping the
+    tzinfo keeps the stored representation byte-identical.
+    """
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 SCHEMA = """
@@ -169,7 +182,7 @@ def log_session(
     audiobook=False,
 ):
     today = session_date or date.today().isoformat()
-    now = datetime.utcnow().isoformat()
+    now = _utc_now().isoformat()
     with get_conn() as conn:
         # Add columns if they don't exist yet (migration)
         for _col in (
@@ -182,7 +195,7 @@ def log_session(
             except Exception:
                 pass
         # Dedup guard: skip if an identical session was logged within the last 90 seconds
-        cutoff = (datetime.utcnow() - timedelta(seconds=90)).isoformat()
+        cutoff = (_utc_now() - timedelta(seconds=90)).isoformat()
         existing = conn.execute(
             """SELECT 1 FROM sessions
                WHERE reader=? AND book_key=? AND pages=? AND session_date=? AND finished=?
@@ -317,7 +330,7 @@ def get_all_sessions_csv():
 
 def add_custom_book(key, title, lexile, fmt, classification, aliases):
 
-    now = datetime.utcnow().isoformat()
+    now = _utc_now().isoformat()
     with get_conn() as conn:
         conn.execute(
             """INSERT OR REPLACE INTO books_custom
@@ -383,7 +396,7 @@ def has_summary_sent(event_type: str, reader: str, event_date: str) -> bool:
 
 def mark_summary_sent(event_type: str, reader: str, event_date: str):
 
-    now = datetime.utcnow().isoformat()
+    now = _utc_now().isoformat()
     with get_conn() as conn:
         try:
             conn.execute(
@@ -400,7 +413,7 @@ def mark_summary_sent(event_type: str, reader: str, event_date: str):
 
 def bingo_init(reader: str, free_ids: set):
     """Ensure free squares are pre-checked; call once at startup / first use."""
-    now = datetime.utcnow().isoformat()
+    now = _utc_now().isoformat()
     with get_conn() as conn:
         for fid in free_ids:
             conn.execute(
@@ -438,7 +451,7 @@ def bingo_check(reader: str, square_id: str, method: str, reason: str = "") -> b
         ).fetchone()
         if existing and existing["checked"]:
             return False
-        now = datetime.utcnow().isoformat()
+        now = _utc_now().isoformat()
         conn.execute(
             """INSERT OR REPLACE INTO bingo_state
 
@@ -471,7 +484,7 @@ def bingo_get_lines_awarded(reader: str) -> set[str]:
 
 def bingo_award_line(reader: str, line_id: str):
 
-    now = datetime.utcnow().isoformat()
+    now = _utc_now().isoformat()
     with get_conn() as conn:
         conn.execute(
             "INSERT OR IGNORE INTO bingo_lines_awarded (reader,line_id,awarded_at) VALUES (?,?,?)",
@@ -509,7 +522,7 @@ def get_book_first_session_date(reader: str, book_key: str) -> str | None:
 def add_bingo_points(reader: str, points: float, reason: str, session_date: str = None):
     """Log a synthetic session for bingo line bonus points."""
     today = session_date or date.today().isoformat()
-    now = datetime.utcnow().isoformat()
+    now = _utc_now().isoformat()
     with get_conn() as conn:
         conn.execute(
             """INSERT INTO sessions

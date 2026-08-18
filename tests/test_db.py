@@ -110,3 +110,17 @@ def test_advancing_a_card_clears_state_and_lines_together(db):
     assert db.bingo_get_checked("alex") == set()
     assert db.bingo_get_lines_awarded("alex") == set()
     assert db.get_bingo_card_num("alex") == 2
+
+
+def test_stored_timestamps_stay_naive_utc(db):
+    """logged_at is compared lexicographically by the dedup guard, so the string
+    format must not change. An aware datetime would append '+00:00' and sort
+    inconsistently against every row already in the database."""
+    _log(db)
+    with db.get_conn() as conn:
+        stamp = conn.execute("SELECT logged_at FROM sessions").fetchone()[0]
+    assert "+" not in stamp and not stamp.endswith("Z")
+    from datetime import datetime
+
+    parsed = datetime.fromisoformat(stamp)
+    assert parsed.tzinfo is None
