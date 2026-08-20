@@ -141,8 +141,13 @@ def parse_read_command(text: str) -> dict:
     }
 
 
+def _eg_reader():
+    """First configured reader, for use in examples."""
+    return READER_KEYS[0] if READER_KEYS else "reader"
+
+
 def _usage():
     return (
-        'Usage: `/read [alex|sam] "book title" pages=N`\n'
-        'Example: `/read alex "Junie B Jones 12" pages=25`'
+        f'Usage: `/read [{"|".join(READER_KEYS)}] "book title" pages=N`\n'
+        f'Example: `/read {_eg_reader()} "Junie B Jones 12" pages=25`'
     )

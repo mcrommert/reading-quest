@@ -11,24 +11,34 @@ Required env vars:
 If either is missing or the credentials file doesn't exist the module
 silently no-ops so the bot works fine without calendar integration.
 
-Color assignments (visible on Skylight):
-  Alex  → Blueberry  (deep blue)
-  Sam  → Tomato     (red)
-  Family / milestone / weekly → Banana (yellow)
+Colour assignments (visible on Skylight): each reader gets a colour by their
+position in the configured roster, so any family's readers are colour-coded
+without naming anyone here. Family / milestone / weekly events are Banana.
 """
 
 import os, re
 from datetime import date, timedelta
 from pathlib import Path
 
+from readers import READER_KEYS
+
 GCAL_CREDENTIALS_FILE = os.environ.get("GCAL_CREDENTIALS_FILE", "/data/gcal-credentials.json")
 GCAL_CALENDAR_ID = os.environ.get("GCAL_CALENDAR_ID", "")
 
-_COLOR = {
-    "alex": "9",  # Blueberry
-    "sam": "11",  # Tomato
-    "family": "5",  # Banana
-}
+# Google Calendar colorIds, assigned by the reader's position in the roster.
+# Keyed on order rather than name so a family's own readers are colour-coded
+# without this module knowing anything about who they are.
+_READER_COLORS = ["9", "11", "6", "10", "3", "7", "2", "4"]
+_COLOR_FAMILY = "5"  # Banana
+
+
+def _reader_color(reader: str) -> str:
+    """colorId for a reader, or "0" (calendar default) if they aren't configured."""
+    try:
+        return _READER_COLORS[READER_KEYS.index(reader) % len(_READER_COLORS)]
+    except ValueError:
+        return "0"
+
 
 _svc = None
 
@@ -130,7 +140,7 @@ def post_daily_summary(reader: str, pts: float, pages: int, streak: int, day: da
             "description": desc,
             "start": {"date": day.isoformat()},
             "end": {"date": _next_day(day)},
-            "colorId": _COLOR.get(reader, "0"),
+            "colorId": _reader_color(reader),
         },
     )
 
@@ -166,7 +176,7 @@ def post_weekly_summary(reader_pts, week_label: str, day: date) -> bool:
             "description": desc,
             "start": {"date": day.isoformat()},
             "end": {"date": _next_day(day)},
-            "colorId": _COLOR["family"],
+            "colorId": _COLOR_FAMILY,
         },
     )
 
@@ -186,7 +196,7 @@ def post_family_goal(pct: int, combined_pts: float, goal: int, day: date) -> boo
             "description": desc,
             "start": {"date": day.isoformat()},
             "end": {"date": _next_day(day)},
-            "colorId": _COLOR["family"],
+            "colorId": _COLOR_FAMILY,
         }
     )
     return gcal_id is not None
@@ -209,7 +219,7 @@ def post_bingo_line(
             "description": desc,
             "start": {"date": day.isoformat()},
             "end": {"date": _next_day(day)},
-            "colorId": _COLOR.get(reader, "0"),
+            "colorId": _reader_color(reader),
         }
     )
     return gcal_id is not None
@@ -226,7 +236,7 @@ def post_milestone(reader: str, message: str, total_pts: float, day: date) -> bo
             "description": desc,
             "start": {"date": day.isoformat()},
             "end": {"date": _next_day(day)},
-            "colorId": _COLOR["family"],
+            "colorId": _COLOR_FAMILY,
         }
     )
     return gcal_id is not None

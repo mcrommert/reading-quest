@@ -140,7 +140,7 @@
     <!-- ============ COMMAND MODE ============ -->
     <div id="cmd" class="cmd hidden">
       <label>Command</label>
-      <textarea id="cmdtext" placeholder='alex "Frog and Toad Are Friends" pages=30'></textarea>
+      <textarea id="cmdtext" placeholder='"book title" pages=30'></textarea>
       <div class="hint">Same syntax as the /read slash command · add <b>finished</b>, <b>audiobook</b>, <b>date=yesterday</b>, <b>format=chapter lexile=750</b> for new books.</div>
       <button class="submit" id="cmdsubmit" type="button">Run</button>
     </div>
@@ -171,6 +171,11 @@
   fetch("/api/config").then(r=>r.json()).then(cfg=>{
     CONFIG = cfg;
     if(cfg.pin_required) el.pinBlock.classList.remove("hidden");
+    // Example text follows whoever is configured, so it never tells a child to
+    // type a name that isn't theirs.
+    const egReader = (cfg.readers[0] && cfg.readers[0].key) || "reader";
+    const cmdBox = document.getElementById("cmdtext");
+    if(cmdBox) cmdBox.placeholder = egReader + ' "Frog and Toad Are Friends" pages=30';
     el.readers.innerHTML = cfg.readers.map(r =>
       `<button type="button" data-key="${r.key}"><span class="mono">${r.monogram||r.name[0]}</span>${r.name}</button>`).join("");
     el.readers.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{

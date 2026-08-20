@@ -85,6 +85,9 @@ PLAYERS_CONFIG = [
 ]
 
 
+# Reader used in help text examples — whoever is configured first.
+_eg_reader = READER_KEYS[0] if READER_KEYS else "reader"
+
 BOARD_DIR = Path(__file__).parent / "board"
 
 
@@ -1144,7 +1147,7 @@ async def slash_read(request: Request):
     text = (form.get("text") or "").strip()
     if not text:
         return _ephemeral(
-            'Usage: `/read [alex|sam] "book title" pages=N`\n'
+            f'Usage: `/read [{"|".join(READER_KEYS)}] "book title" pages=N`\n'
             "Add `finished` when you finish the book · `audiobook` for ¼ points · "
             "`date=yesterday` to backdate."
         )
@@ -1487,10 +1490,10 @@ async def slash_bingo(request: Request):
     if not text:
         return _ephemeral(
             "Usage:\n"
-            "• `/bingo check alex pillow fort` — mark a square\n"
-            "• `/bingo uncheck alex pillow fort` — undo a check\n"
-            "• `/bingo show alex` — view current card\n"
-            "• `/bingo audit alex` — show method + timestamp per square"
+            f"• `/bingo check {_eg_reader} pillow fort` — mark a square\n"
+            f"• `/bingo uncheck {_eg_reader} pillow fort` — undo a check\n"
+            f"• `/bingo show {_eg_reader}` — view current card\n"
+            f"• `/bingo audit {_eg_reader}` — show method + timestamp per square"
         )
     parts = text.split(None, 2)
     sub = parts[0].lower() if parts else ""

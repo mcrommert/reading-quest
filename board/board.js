@@ -411,6 +411,12 @@
   function render(data) {
     const milestonePts = (data.milestones || []).map(m => m.pts);
     renderHeader(data);
+    // Footer example follows the configured roster rather than naming a
+    // reader who may not exist in this deployment.
+    const hint = document.querySelector('[data-log-hint]');
+    if (hint && (data.players || []).length) {
+      hint.textContent = `/read ${data.players[0].key} "book" pages=30 finished`;
+    }
     const container = document.querySelector('.players');
     const tpl = document.getElementById('player-tpl');
     if (container && tpl) {
