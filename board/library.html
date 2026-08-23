@@ -235,6 +235,9 @@
   .badge.classification.modern { background: color-mix(in oklch, var(--sun) 30%, var(--paper)); color: var(--ink); }
   .badge.classification.masterpiece { background: var(--leaf-soft); color: var(--ink); font-weight: 600; }
   .badge.interest { background: #f3e8d8; }
+  /* Which competition season a book was read in. */
+  .badge.season  { background: #e4edf3; border-color: #b8cad8; }
+  .hidden { display: none !important; }
 
   /* stats inside book card */
   .book-stats {
@@ -366,6 +369,8 @@
         <button class="chip" data-filter="finished">Finished</button>
         <button class="chip" data-filter="reading">In progress</button>
       </div>
+      <span class="label season-label hidden" data-season-label>Season</span>
+      <div class="group season hidden" data-season-group></div>
       <span class="label">Sort</span>
       <div class="group sort">
         <button class="chip active" data-sort="recent">Recent</button>
@@ -540,6 +545,7 @@
   const state = {
     data: null,
     filter: {},
+    season: {},
     sort:   {},
   };
 
@@ -562,11 +568,25 @@
   }
 
   // ---------- sort + filter -------------------------------------------
-  function applySortFilter(books, filterKey, sortKey) {
+  // "2026-summer" -> "Summer 2026". Falls back to the raw value for anything
+  // that doesn't follow the year-name convention.
+  function seasonLabel(s) {
+    const m = /^(\d{4})-(.+)$/.exec(s || '');
+    if (!m) return s || '';
+    return m[2].charAt(0).toUpperCase() + m[2].slice(1) + ' ' + m[1];
+  }
+
+  function applySortFilter(books, filterKey, sortKey, seasonKey) {
     let out = books.slice();
 
     if (filterKey === 'finished')      out = out.filter(b => b.finished);
     else if (filterKey === 'reading')  out = out.filter(b => !b.finished);
+
+    // A book read across a rollover belongs to both seasons, so it shows under
+    // either filter rather than being attributed to just one.
+    if (seasonKey && seasonKey !== 'all') {
+      out = out.filter(b => (b.seasons || []).indexOf(seasonKey) !== -1);
+    }
 
     out.sort((a, b) => {
       switch (sortKey) {
@@ -604,6 +624,10 @@
       badges.push(`<span class="badge classification ${cls}">${escapeHtml(b.classification_label || '')}</span>`);
     }
     if (b.interest_level)       badges.push(`<span class="badge interest">AR ${escapeHtml(b.interest_level)}</span>`);
+    // Which competition season(s) this was read in. Books are never cleared by a
+    // season roll, so the tag is how you tell them apart.
+    (b.seasons || []).forEach(s =>
+      badges.push(`<span class="badge season">${escapeHtml(seasonLabel(s))}</span>`));
 
     const finishedPill = b.finished
       ? `<span class="finished-pill">Finished · ${fmtDate(b.finished_date)}</span>`
@@ -668,7 +692,7 @@
     }
 
     // books list
-    const books = applySortFilter(p.books, state.filter[p.key], state.sort[p.key]);
+    const books = applySortFilter(p.books, state.filter[p.key], state.sort[p.key], state.season[p.key]);
     const list  = view.querySelector('[data-books]');
     if (books.length === 0) {
       list.innerHTML = `
@@ -690,6 +714,7 @@
     players.forEach((p, i) => {
       if (state.filter[p.key] == null) state.filter[p.key] = 'all';
       if (state.sort[p.key] == null)   state.sort[p.key]   = 'recent';
+      if (state.season[p.key] == null) state.season[p.key] = 'all';
 
       const btn = document.createElement('button');
       btn.className = 'tab' + (i === 0 ? ' active' : '');
@@ -716,6 +741,28 @@
           if (pl) renderPlayer(pl);
         });
       });
+      // Season chips are built from the data: one per season present, newest
+      // first, hidden entirely while there is only one season to look at.
+      const seasons = (state.data && state.data.seasons) || [];
+      const seasonGroup = view.querySelector('[data-season-group]');
+      const seasonLabelEl = view.querySelector('[data-season-label]');
+      if (seasonGroup && seasons.length > 1) {
+        seasonGroup.classList.remove('hidden');
+        if (seasonLabelEl) seasonLabelEl.classList.remove('hidden');
+        const opts = ['all'].concat(seasons.slice().sort().reverse());
+        seasonGroup.innerHTML = opts.map(sv =>
+          `<button class="chip${sv === state.season[kid] ? ' active' : ''}" data-season="${escapeHtml(sv)}">` +
+          `${sv === 'all' ? 'All time' : escapeHtml(seasonLabel(sv))}</button>`).join('');
+        seasonGroup.querySelectorAll('.chip').forEach(c => {
+          c.addEventListener('click', () => {
+            seasonGroup.querySelectorAll('.chip').forEach(b => b.classList.remove('active'));
+            c.classList.add('active');
+            state.season[kid] = c.getAttribute('data-season');
+            const pl = state.data && state.data.players.find(x => x.key === kid);
+            if (pl) renderPlayer(pl);
+          });
+        });
+      }
       view.querySelectorAll('.group.sort .chip').forEach(c => {
         c.addEventListener('click', () => {
           view.querySelectorAll('.group.sort .chip').forEach(b => b.classList.remove('active'));
