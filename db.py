@@ -11,6 +11,14 @@ DB_PATH = os.environ.get("DB_PATH", "/data/reading.db")
 # the default via the ADD COLUMN default below.
 CURRENT_SEASON = os.environ.get("CURRENT_SEASON", "2026-summer")
 
+# Season stamped onto sessions that pre-date the season column, i.e. every row
+# already in the database when this version first runs. It is deliberately NOT
+# CURRENT_SEASON: you upgrade *into* a new season, so using the current one
+# would relabel the whole back catalogue as belonging to a season it wasn't read
+# in. Set this to whichever season your existing history belongs to before the
+# first run after upgrading.
+LEGACY_SEASON = os.environ.get("LEGACY_SEASON", "2026-summer")
+
 
 def _utc_now() -> datetime:
     """Current UTC time as a naive datetime.
@@ -162,11 +170,34 @@ def get_conn():
     return conn
 
 
+# Columns added to `sessions` after the original schema shipped. Applied at
+# startup so a database written by an older version is queryable straight away,
+# rather than only after the next session is logged.
+_SESSION_MIGRATIONS = (
+    "finished INTEGER NOT NULL DEFAULT 0",
+    "audiobook INTEGER NOT NULL DEFAULT 0",
+    f"season TEXT NOT NULL DEFAULT '{LEGACY_SEASON}'",
+)
+
+
+def _migrate_sessions(conn):
+    """Add any missing session columns. Existing rows take the column default."""
+    existing = {r[1] for r in conn.execute("PRAGMA table_info(sessions)")}
+    for spec in _SESSION_MIGRATIONS:
+        if spec.split()[0] in existing:
+            continue
+        try:
+            conn.execute(f"ALTER TABLE sessions ADD COLUMN {spec}")
+        except Exception:
+            pass
+
+
 def init_db():
 
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     with get_conn() as conn:
         conn.executescript(SCHEMA)
+        _migrate_sessions(conn)
 
 
 def log_session(
@@ -184,16 +215,9 @@ def log_session(
     today = session_date or date.today().isoformat()
     now = _utc_now().isoformat()
     with get_conn() as conn:
-        # Add columns if they don't exist yet (migration)
-        for _col in (
-            "finished INTEGER NOT NULL DEFAULT 0",
-            "audiobook INTEGER NOT NULL DEFAULT 0",
-            "season TEXT NOT NULL DEFAULT '2026-summer'",
-        ):
-            try:
-                conn.execute(f"ALTER TABLE sessions ADD COLUMN {_col}")
-            except Exception:
-                pass
+        # Belt and braces: init_db already ran these, but a database swapped in
+        # underneath a running container would not have been through it.
+        _migrate_sessions(conn)
         # Dedup guard: skip if an identical session was logged within the last 90 seconds
         cutoff = (_utc_now() - timedelta(seconds=90)).isoformat()
         existing = conn.execute(

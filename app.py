@@ -700,6 +700,38 @@ def _build_library_payload() -> dict:
                    FROM sessions WHERE reader=? AND book_key != 'bingo-bonus'""",
                 (reader,),
             ).fetchone()
+            # Per-season totals. The library is deliberately all-time -- books
+            # read never disappear when a season rolls -- so this is how a
+            # completed season is summarised rather than filtered away.
+            season_rows = conn.execute(
+                """SELECT season,
+
+                          COUNT(DISTINCT book_key) AS books_total,
+
+                          COUNT(DISTINCT CASE WHEN finished=1 THEN book_key END) AS books_finished,
+
+                          COALESCE(SUM(pages),0)   AS pages,
+
+                          COALESCE(SUM(points),0)  AS points,
+
+                          COUNT(*) AS sessions
+
+                   FROM sessions WHERE reader=? AND book_key != 'bingo-bonus'
+
+                   GROUP BY season ORDER BY season""",
+                (reader,),
+            ).fetchall()
+            season_totals = [
+                {
+                    "season": r["season"],
+                    "books_total": int(r["books_total"]),
+                    "books_finished": int(r["books_finished"]),
+                    "pages": int(r["pages"]),
+                    "points": float(r["points"]),
+                    "sessions": int(r["sessions"]),
+                }
+                for r in season_rows
+            ]
             # Per-book rows
             rows = conn.execute(
                 """SELECT book_key, book_title,
@@ -716,7 +748,9 @@ def _build_library_payload() -> dict:
 
                           MIN(session_date)         AS first_session,
 
-                          MAX(session_date)         AS last_session
+                          MAX(session_date)         AS last_session,
+
+                          GROUP_CONCAT(DISTINCT season) AS seasons
 
                    FROM sessions
 
@@ -756,6 +790,10 @@ def _build_library_payload() -> dict:
                     "finished_date": row["finished_date"],
                     "first_session": row["first_session"],
                     "last_session": row["last_session"],
+                    # Every season this book was read in. A book straddling a
+                    # rollover legitimately belongs to both, so it is a list
+                    # rather than a single attribution.
+                    "seasons": sorted((row["seasons"] or "").split(",")) if row["seasons"] else [],
                 }
             )
         players_out.append(
@@ -772,14 +810,22 @@ def _build_library_payload() -> dict:
                     "points": float(tot["points"]),
                     "sessions": int(tot["sessions"]),
                 },
+                "by_season": season_totals,
                 "books": books_out,
             }
         )
+    all_seasons = sorted(
+        {s_ for p in players_out for s_ in (x["season"] for x in p["by_season"]) if s_}
+    )
     return {
         "today": {
             "iso": today.isoformat(),
             "label": _fmt_today_label(today),
         },
+        # Every season the library has data for, oldest first. The current one
+        # comes from config and may not be present yet if nothing is logged.
+        "seasons": all_seasons,
+        "current_season": db.CURRENT_SEASON,
         "players": players_out,
     }
 
