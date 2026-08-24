@@ -275,6 +275,42 @@ def _award_bingo_lines(
         out_lines.append(f"  {reader.capitalize()}'s total: **{fmt_pts(total_pts)} pts**")
 
 
+def _revoke_broken_bingo_lines(reader: str, out_lines: list[str], card_num: int = 1) -> int:
+    """Take back line awards whose squares are no longer all checked.
+
+    Undo has to actually undo. Checking a square used to mean typing
+    `/bingo check <reader> <square>`, so "points already awarded are kept" was a
+    reasonable rule -- you did not award yourself 25 points by accident. Tapping a
+    square on the web takes one finger, and a mis-tap that permanently inflates a
+    child's score with no way back is worse than the small risk of losing points
+    you meant to keep.
+
+    Deliberately does NOT run after a card roll: increment_bingo_card() wipes both
+    bingo_state and bingo_lines_awarded, so there is nothing left to reconcile and
+    the points banked for the finished card stay banked.
+    """
+    checked = db.bingo_get_checked(reader)
+    squares = bingo_mod.get_card_squares(reader, card_num)
+    checked_ix = {i for i, sq in enumerate(squares) if sq[0] in checked}
+    bonus = bingo_mod.line_bonus(card_num)
+    revoked = 0
+    for line_id in sorted(db.bingo_get_lines_awarded(reader)):
+        m = re.match(r"^line_(\d+)$", line_id)
+        if not m:
+            continue
+        idx = int(m.group(1))
+        if idx >= len(bingo_mod.BINGO_LINES):
+            continue
+        if all(pos in checked_ix for pos in bingo_mod.BINGO_LINES[idx]):
+            continue
+        label = bingo_mod.LINE_LABELS[idx]
+        db.bingo_revoke_line(reader, line_id)
+        db.remove_bingo_points(reader, f"Bingo {label}")
+        out_lines.append(f"↩️ **{label}** is no longer complete — **−{bonus} pts**")
+        revoked += 1
+    return revoked
+
+
 def _post_realtime_summaries(reader: str, today: date):
 
     stats = db.get_daily_stats(reader, today.isoformat())
@@ -1277,6 +1313,8 @@ async def api_bingo_post(request: Request):
             _award_bingo_lines(reader, events, card_num=card_num)
     else:
         changed = db.bingo_uncheck(reader, square_id)
+        if changed:
+            _revoke_broken_bingo_lines(reader, events, card_num=card_num)
 
     payload = _bingo_payload(reader)
     return JSONResponse(
@@ -1719,10 +1757,9 @@ async def slash_bingo(request: Request):
     if sub == "uncheck":
         ok = db.bingo_uncheck(reader, square_id)
         if ok:
-            return _ephemeral(
-                f"↩️ Unchecked **{label}** for {reader.capitalize()}. "
-                f"(Any points already awarded are kept.)"
-            )
+            msg = [f"↩️ Unchecked **{label}** for {reader.capitalize()}."]
+            _revoke_broken_bingo_lines(reader, msg, card_num=_card_num)
+            return _ephemeral("\n".join(msg))
         return _ephemeral(f"**{label}** wasn't checked — nothing to undo.")
     norm_q = square_query.lower().replace("_", " ").strip()
     if norm_q not in (square_id.lower().replace("_", " "), label.lower()):

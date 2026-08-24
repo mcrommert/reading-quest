@@ -152,27 +152,88 @@ def test_line_completion_is_reported_on_the_response(client):
     assert any("line" in e.lower() for e in last["events"])
 
 
-def test_unchecking_keeps_points_already_awarded(client):
-    """Matches the slash command's stated behaviour: undo the tick, keep the pts."""
-    sqs = squares_for()
-    for pos in bingo.BINGO_LINES[0]:
-        client.post(
-            "/api/bingo",
-            json={"reader": "alex", "square_id": sqs[pos][0], "checked": True},
-        )
-    before = client.get("/api/bingo", params={"reader": "alex"}).json()["pts_bonus"]
+def test_unchecking_a_square_takes_back_the_line_bonus(client):
+    """Undo must actually undo.
 
+    The slash command's original rule was "points already awarded are kept",
+    which was safe when checking meant typing a command. On a tap grid a mis-tap
+    is one finger, and a stuck +25 with an empty card is exactly the bug this
+    replaced: squares unchecked, yet lines/bonus frozen on the board.
+    """
+    sqs = squares_for()
+    row = bingo.BINGO_LINES[0]
+    for pos in row:
+        client.post(
+            "/api/bingo", json={"reader": "alex", "square_id": sqs[pos][0], "checked": True}
+        )
+    assert client.get("/api/bingo", params={"reader": "alex"}).json()[
+        "pts_bonus"
+    ] == bingo.line_bonus(1)
+
+    undo = client.post(
+        "/api/bingo", json={"reader": "alex", "square_id": sqs[row[0]][0], "checked": False}
+    ).json()
+    assert undo["lines_count"] == 0
+    assert undo["lines_awarded"] == []
+    assert undo["pts_bonus"] == 0
+    assert any("no longer complete" in e.lower() for e in undo["events"])
+
+
+def test_revoking_a_line_removes_its_points_from_the_total(client):
+    """The bonus is stored as a synthetic session, so revoking must drop that row
+    or the points stay on the board even after the line is gone."""
+    sqs = squares_for()
+    row = bingo.BINGO_LINES[0]
+    for pos in row:
+        client.post(
+            "/api/bingo", json={"reader": "alex", "square_id": sqs[pos][0], "checked": True}
+        )
+    with_line = client.post(
+        "/api/bingo", json={"reader": "alex", "square_id": sqs[row[0]][0], "checked": True}
+    ).json()["total_pts"]
+    assert with_line == bingo.line_bonus(1)
+
+    after = client.post(
+        "/api/bingo", json={"reader": "alex", "square_id": sqs[row[0]][0], "checked": False}
+    ).json()
+    assert after["total_pts"] == 0
+
+
+def test_relines_cleanly_after_a_revoke(client):
+    """Re-checking the same square must re-award, not stay silently revoked."""
+    sqs = squares_for()
+    row = bingo.BINGO_LINES[0]
+    for pos in row:
+        client.post(
+            "/api/bingo", json={"reader": "alex", "square_id": sqs[pos][0], "checked": True}
+        )
     client.post(
-        "/api/bingo",
-        json={
-            "reader": "alex",
-            "square_id": sqs[bingo.BINGO_LINES[0][0]][0],
-            "checked": False,
-        },
+        "/api/bingo", json={"reader": "alex", "square_id": sqs[row[0]][0], "checked": False}
     )
-    after = client.get("/api/bingo", params={"reader": "alex"}).json()
-    assert after["pts_bonus"] == before
-    assert after["lines_count"] == 1
+    again = client.post(
+        "/api/bingo", json={"reader": "alex", "square_id": sqs[row[0]][0], "checked": True}
+    ).json()
+    assert again["lines_count"] == 1
+    assert again["pts_bonus"] == bingo.line_bonus(1)
+    assert again["total_pts"] == bingo.line_bonus(1)
+
+
+def test_unrelated_lines_survive_a_revoke(client):
+    """Breaking one line must not take down a line that is still complete."""
+    sqs = squares_for()
+    for pos in set(bingo.BINGO_LINES[0]) | set(bingo.BINGO_LINES[1]):
+        client.post(
+            "/api/bingo", json={"reader": "alex", "square_id": sqs[pos][0], "checked": True}
+        )
+    before = client.get("/api/bingo", params={"reader": "alex"}).json()
+    assert before["lines_count"] >= 2
+
+    after = client.post(
+        "/api/bingo",
+        json={"reader": "alex", "square_id": sqs[bingo.BINGO_LINES[0][0]][0], "checked": False},
+    ).json()
+    assert "line_1" in after["lines_awarded"]
+    assert "line_0" not in after["lines_awarded"]
 
 
 # ── PIN ───────────────────────────────────────────────────────────────────────

@@ -516,6 +516,37 @@ def bingo_award_line(reader: str, line_id: str):
         )
 
 
+def bingo_revoke_line(reader: str, line_id: str) -> bool:
+    """Inverse of bingo_award_line. True if an award row was actually removed."""
+    with get_conn() as conn:
+        cur = conn.execute(
+            "DELETE FROM bingo_lines_awarded WHERE reader=? AND line_id=?", (reader, line_id)
+        )
+        return cur.rowcount > 0
+
+
+def remove_bingo_points(reader: str, reason: str) -> bool:
+    """Inverse of add_bingo_points: drop one synthetic bingo-bonus session.
+
+    Deletes a single most-recent match rather than every row with this reason,
+    so re-completing and re-breaking the same line nets out correctly instead of
+    wiping the whole history of that line in one go.
+    """
+    with get_conn() as conn:
+        row = conn.execute(
+            # rowid needs an explicit alias: the Row factory keys on the column
+            # name, and a bare `rowid` is not addressable that way.
+            """SELECT rowid AS rid FROM sessions
+               WHERE reader=? AND book_key='bingo-bonus' AND book_title=?
+               ORDER BY rid DESC LIMIT 1""",
+            (reader, reason),
+        ).fetchone()
+        if row is None:
+            return False
+        conn.execute("DELETE FROM sessions WHERE rowid=?", (row["rid"],))
+        return True
+
+
 def get_books_finished_this_week(reader: str, today: date = None) -> int:
     """Count distinct book_keys with finished=1 in the last 7 days."""
     today = today or date.today()
