@@ -1184,6 +1184,116 @@ async def api_log(request: Request):
     return JSONResponse({"ok": True, **res})
 
 
+def _bingo_payload(reader: str) -> dict:
+    """Everything the web board needs to draw and operate one reader's card.
+
+    The slash command was the only place square *labels* were ever exposed, which
+    left the honour-system squares uncheckable outside Mattermost. This is the
+    same data, shaped for a browser.
+    """
+    card_num = db.get_bingo_card_num(reader)
+    squares = bingo_mod.get_card_squares(reader, card_num)
+    state = {r["square_id"]: r for r in db.bingo_get_state(reader)}
+    awarded = db.bingo_get_lines_awarded(reader)
+    bonus = bingo_mod.line_bonus(card_num)
+    free_id = bingo_mod.get_free_square(reader, card_num)
+
+    out = []
+    for i, (sid, label, trigger) in enumerate(squares):
+        s = state.get(sid) or {}
+        out.append(
+            {
+                "index": i,
+                "id": sid,
+                "label": label,
+                "checked": bool(s.get("checked")),
+                "auto": bool(trigger),
+                "free": sid == free_id,
+                "method": s.get("method"),
+                "reason": s.get("reason"),
+                "checked_at": s.get("checked_at"),
+            }
+        )
+    return {
+        "reader": reader,
+        "card_num": card_num,
+        "size": bingo_mod.CARD_SIZE,
+        "free_index": bingo_mod.FREE_INDEX,
+        "lines": bingo_mod.BINGO_LINES,
+        "lines_awarded": sorted(awarded),
+        "lines_count": len(awarded),
+        "line_bonus": bonus,
+        "pts_bonus": len(awarded) * bonus,
+        "squares": out,
+    }
+
+
+@app.get("/api/bingo", include_in_schema=False)
+async def api_bingo_get(request: Request):
+    reader = resolve_reader(request.query_params.get("reader", ""))
+    if not reader:
+        return JSONResponse({"ok": False, "error": "Pick a reader."}, status_code=400)
+    return JSONResponse({"ok": True, **_bingo_payload(reader)})
+
+
+@app.post("/api/bingo", include_in_schema=False)
+async def api_bingo_post(request: Request):
+    try:
+        body = await request.json()
+    except Exception:
+        return JSONResponse({"ok": False, "error": "Expected a JSON body."}, status_code=400)
+    if not isinstance(body, dict):
+        return JSONResponse({"ok": False, "error": "Expected a JSON object."}, status_code=400)
+    if not _log_pin_ok(request, body):
+        return JSONResponse({"ok": False, "error": "Wrong or missing PIN."}, status_code=403)
+
+    reader = resolve_reader(body.get("reader", ""))
+    if not reader:
+        return JSONResponse({"ok": False, "error": "Pick a reader."}, status_code=400)
+
+    square_id = (body.get("square_id") or "").strip()
+    if not square_id:
+        return JSONResponse({"ok": False, "error": "Pick a square."}, status_code=400)
+
+    card_num = db.get_bingo_card_num(reader)
+    # square_label() falls back to returning the ID it was given, so it cannot be
+    # used to validate. square_index() returns None for an unknown square, which
+    # is what stops a bad ID being written to the DB as a phantom checked square.
+    if bingo_mod.square_index(reader, square_id, card_num=card_num) is None:
+        return JSONResponse(
+            {"ok": False, "error": "That square is not on this card."}, status_code=400
+        )
+    label = bingo_mod.square_label(reader, square_id, card_num=card_num)
+
+    want_checked = bool(body.get("checked", True))
+    events: list[str] = []
+
+    if want_checked:
+        changed = db.bingo_check(reader, square_id, "manual", "checked from the web")
+        if changed:
+            # Awarding runs on the card the square belongs to. Read the card number
+            # back afterwards: completing the final line rolls the reader onto a new
+            # card, which resets the grid the browser is holding.
+            _award_bingo_lines(reader, events, card_num=card_num)
+    else:
+        changed = db.bingo_uncheck(reader, square_id)
+
+    payload = _bingo_payload(reader)
+    return JSONResponse(
+        {
+            "ok": True,
+            "changed": changed,
+            "square_id": square_id,
+            "label": label,
+            "checked": want_checked,
+            "card_rolled": payload["card_num"] != card_num,
+            "events": [_plain(e) for e in events],
+            "total_pts": db.get_total_stats(reader)["pts"],
+            **payload,
+        }
+    )
+
+
 @app.post("/slash/read")
 async def slash_read(request: Request):
 

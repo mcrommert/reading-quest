@@ -71,6 +71,31 @@
   .result .ev{margin-top:10px;padding-top:10px;border-top:1px dashed var(--ink)}
   .result .ev div{margin:4px 0;font-weight:600}
   .cmd textarea{width:100%;font-family:var(--mono);font-size:16px;padding:12px;border:1.5px solid var(--ink);border-radius:8px;min-height:64px;resize:vertical}
+  /* ---------- bingo ---------- */
+  .bingo-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:16px 0 8px}
+  .bingo-head .stat{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--ink-2)}
+  .bingo-head .stat b{font-family:var(--serif);font-size:17px;color:var(--sun-deep);letter-spacing:0}
+  .bgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin-top:4px}
+  .bcell{position:relative;aspect-ratio:1;border:1.5px solid var(--ink);border-radius:6px;background:var(--paper);
+    color:var(--ink);font-family:var(--sans);font-size:9.5px;line-height:1.16;font-weight:500;
+    padding:5px 4px;cursor:pointer;overflow:hidden;text-align:left;display:block;width:100%;
+    -webkit-tap-highlight-color:transparent}
+  .bcell:focus-visible{outline:2px solid var(--sun);outline-offset:2px}
+  .bcell.on{background:var(--leaf);color:#fff;border-color:var(--ink)}
+  .bcell.on::before{content:"✓";position:absolute;right:3px;bottom:2px;font-size:12px;font-weight:700;line-height:1}
+  .bcell.auto::after{content:"";position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--sun-deep)}
+  .bcell.on.auto::after{background:#fff}
+  .bcell.inline{box-shadow:0 0 0 2px var(--sun) inset}
+  .bcell.free{background:var(--sun);color:var(--ink);font-family:var(--serif);font-weight:600;font-size:12px;
+    display:grid;place-items:center;text-align:center;cursor:default}
+  .bcell.free::before{content:none}
+  .bcell:disabled{cursor:default}
+  .bcell.busy{opacity:.5}
+  .blegend{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:10.5px;color:var(--ink-2);
+    text-transform:uppercase;letter-spacing:.07em;margin-top:10px}
+  .blegend span{display:flex;align-items:center;gap:5px}
+  .blegend i{width:8px;height:8px;border-radius:50%;background:var(--sun-deep);display:inline-block}
+  .blegend u{width:11px;height:11px;border:1.5px solid var(--ink);border-radius:3px;background:var(--leaf);display:inline-block}
 </style>
 </head>
 <body>
@@ -83,6 +108,7 @@
   <div class="modeswitch">
     <button id="mode-form" class="on" type="button">Form</button>
     <button id="mode-cmd" type="button">Command</button>
+    <button id="mode-bingo" type="button">Bingo</button>
   </div>
 
   <div class="card">
@@ -145,6 +171,27 @@
       <button class="submit" id="cmdsubmit" type="button">Run</button>
     </div>
 
+    <!-- ============ BINGO MODE ============ -->
+    <div id="bingo" class="hidden">
+      <label>Reader</label>
+      <div class="seg" id="breaders"></div>
+
+      <div id="bcard" class="hidden">
+        <div class="bingo-head">
+          <div class="stat">Lines <b id="blines">0</b></div>
+          <div class="stat">Bonus <b id="bbonus">0</b> pts</div>
+          <div class="stat" id="bcardnum"></div>
+        </div>
+        <div class="bgrid" id="bgrid"></div>
+        <div class="blegend">
+          <span><u></u> Checked</span>
+          <span><i></i> Checks itself when you log reading</span>
+        </div>
+        <div class="hint">Tap a square to check it, tap again to undo. Points already
+          awarded for a completed line are kept.</div>
+      </div>
+    </div>
+
     <div id="msg" class="msg"></div>
     <div id="result" class="result"></div>
   </div>
@@ -186,6 +233,7 @@
     if(cfg.readers.length===1){ el.readers.firstChild.click(); }
     el.format.innerHTML = cfg.formats.map(f=>`<option value="${f.value}" data-lex="${f.needs_lexile?1:0}">${f.label}</option>`).join("");
     el.format.addEventListener("change", syncLex); syncLex();
+    bingoReaders();   // idempotent; covers config landing while Bingo is already open
   });
   function syncLex(){
     const opt = el.format.selectedOptions[0];
@@ -307,14 +355,109 @@
     $("#cmdtext").value="";
   }
 
+  // ---------- bingo ----------
+  // The square labels only ever existed in the Mattermost slash command, which
+  // left the honour-system squares uncheckable from a browser. This is that card,
+  // tappable.
+  let bReader = null, bBusy = false;
+
+  function bingoReaders(){
+    const box = $("#breaders");
+    // CONFIG arrives async. Bail without marking done if it hasn't landed yet,
+    // so switching to this tab again rebuilds instead of showing an empty picker.
+    if(!box || !CONFIG.readers.length || box.childElementCount) return;
+    box.innerHTML = CONFIG.readers.map(r =>
+      `<button type="button" data-key="${r.key}"><span class="mono">${r.monogram||r.name[0]}</span>${r.name}</button>`).join("");
+    box.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>{
+      bReader = b.dataset.key;
+      box.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on");
+      loadCard();
+    }));
+    if(CONFIG.readers.length===1) box.firstChild.click();
+  }
+
+  function loadCard(){
+    if(!bReader) return;
+    clearMsg();
+    fetch("/api/bingo?reader="+encodeURIComponent(bReader))
+      .then(r=>r.json())
+      .then(d=>{ if(!d.ok){ showMsg(d.error||"Couldn't load the card.",true); return; } renderCard(d); })
+      .catch(()=>showMsg("Network error loading the card.",true));
+  }
+
+  function renderCard(d){
+    $("#bcard").classList.remove("hidden");
+    $("#blines").textContent = d.lines_count;
+    $("#bbonus").textContent = fmt(d.pts_bonus);
+    $("#bcardnum").innerHTML = d.card_num>1 ? ("Card <b>"+d.card_num+"</b>") : "";
+
+    // Squares belonging to an already-awarded line get an inset ring, so a child
+    // can see which of their checks actually paid out.
+    const inLine = new Set();
+    (d.lines_awarded||[]).forEach(id=>{
+      const m = /^line_(\d+)$/.exec(String(id));      // ids are line_0 .. line_11
+      const line = m && d.lines && d.lines[+m[1]];
+      if(line) line.forEach(i=>inLine.add(i));
+    });
+
+    $("#bgrid").innerHTML = d.squares.map(s=>{
+      if(s.free) return `<button class="bcell free" type="button" disabled>Free</button>`;
+      const cls = ["bcell"];
+      if(s.checked) cls.push("on");
+      if(s.auto) cls.push("auto");
+      if(inLine.has(s.index)) cls.push("inline");
+      return `<button class="${cls.join(" ")}" type="button" data-id="${esc(s.id)}"`
+           + ` title="${esc(s.label)}" aria-pressed="${s.checked?"true":"false"}">${esc(s.label)}</button>`;
+    }).join("");
+
+    $("#bgrid").querySelectorAll(".bcell[data-id]").forEach(b=>
+      b.addEventListener("click",()=>toggle(b)));
+  }
+
+  function esc(s){
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;")
+                    .replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function toggle(btn){
+    if(bBusy) return;
+    if(CONFIG.pin_required && !el.pin.value.trim()){
+      showMsg("Enter the PIN first.",true); el.pin.focus(); return;
+    }
+    bBusy = true; btn.classList.add("busy"); clearMsg();
+    const wantChecked = !btn.classList.contains("on");
+    fetch("/api/bingo",{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({reader:bReader, square_id:btn.dataset.id,
+                           checked:wantChecked, pin:el.pin.value.trim()})
+    })
+    .then(r=>r.json().then(d=>({status:r.status,d})))
+    .then(({status,d})=>{
+      if(status!==200 || !d.ok){ showMsg(d.error||"Couldn't update that square.",true); return; }
+      renderCard(d);
+      if(d.card_rolled){
+        showMsg("Card complete! A fresh card is up — every line is worth more now.");
+      } else if(d.events && d.events.length){
+        el.msg.className="msg show";
+        el.msg.textContent = d.events.join(" · ");
+      }
+    })
+    .catch(()=>showMsg("Network error. Nothing was changed.",true))
+    .finally(()=>{ bBusy=false; btn.classList.remove("busy"); });
+  }
+
   // ---------- mode switch ----------
-  $("#mode-form").addEventListener("click",()=>switchMode("form"));
-  $("#mode-cmd").addEventListener("click",()=>switchMode("cmd"));
+  const MODES = {form:"#form", cmd:"#cmd", bingo:"#bingo"};
+  Object.keys(MODES).forEach(m =>
+    $("#mode-"+m).addEventListener("click",()=>switchMode(m)));
   function switchMode(m){
-    const f=m==="form";
-    $("#mode-form").classList.toggle("on",f); $("#mode-cmd").classList.toggle("on",!f);
-    $("#form").classList.toggle("hidden",!f); $("#cmd").classList.toggle("hidden",f);
+    Object.keys(MODES).forEach(k=>{
+      $("#mode-"+k).classList.toggle("on", k===m);
+      $(MODES[k]).classList.toggle("hidden", k!==m);
+    });
     clearMsg(); el.result.classList.remove("show");
+    if(m==="bingo"){ bingoReaders(); if(bReader) loadCard(); }
   }
 })();
 </script>
