@@ -253,9 +253,9 @@
     fetch("/api/books?q="+encodeURIComponent(q)+"&limit=8").then(r=>r.json()).then(list=>{
       let html = list.map((b,i)=>{
         const meta=[b.lexile?b.lexile+"L":null, (b.format||"").replace(/_/g," ")].filter(Boolean).join(" · ");
-        return `<div class="item" data-key="${b.key}" data-title="${b.title.replace(/"/g,'&quot;')}"><div class="t">${b.title}</div>${meta?`<div class="m">${meta}</div>`:""}</div>`;
+        return `<div class="item" data-key="${esc(b.key)}" data-title="${esc(b.title)}"><div class="t">${esc(b.title)}</div>${meta?`<div class="m">${esc(meta)}</div>`:""}</div>`;
       }).join("");
-      html += `<div class="item add" data-add="1"><span class="add">＋ Add “${q}” as a new book</span></div>`;
+      html += `<div class="item add" data-add="1"><span class="add">＋ Add “${esc(q)}” as a new book</span></div>`;
       el.suggest.innerHTML=html; el.suggest.classList.add("show"); hi=-1;
       el.suggest.querySelectorAll(".item").forEach(it=>it.addEventListener("click",()=>{
         if(it.dataset.add){ enterNewBook(el.book.value.trim()); }
@@ -266,7 +266,7 @@
   function pickBook(key,title){
     selected={key,title}; el.suggest.classList.remove("show"); el.newbook.classList.add("hidden");
     el.book.value=""; el.book.classList.add("hidden");
-    el.selected.className=""; el.selected.innerHTML=`<span class="chip">${title}<button type="button" id="unpick">×</button></span>`;
+    el.selected.className=""; el.selected.innerHTML=`<span class="chip">${esc(title)}<button type="button" id="unpick">×</button></span>`;
     $("#unpick").addEventListener("click",clearSelected);
   }
   function clearSelected(){
@@ -335,13 +335,13 @@
 
   function showResult(d){
     clearMsg();
-    const evs = (d.events||[]).map(e=>`<div>🎉 ${e}</div>`).join("");
-    const warn = d.ug_warning?`<div style="color:#7a2c19">⚠️ ${d.ug_warning}</div>`:"";
+    const evs = (d.events||[]).map(e=>`<div>🎉 ${esc(e)}</div>`).join("");
+    const warn = d.ug_warning?`<div style="color:#7a2c19">⚠️ ${esc(d.ug_warning)}</div>`:"";
     el.result.innerHTML =
-      `<div class="who">${d.reader.toUpperCase()}${d.backdated?" · logged for "+d.session_date:""}</div>
+      `<div class="who">${esc(d.reader.toUpperCase())}${d.backdated?" · logged for "+esc(d.session_date):""}</div>
        <div class="big">+${fmt(d.points)} pts</div>
-       <div class="bk">${d.book_title}${d.audiobook?" 🎧":""}${d.finished?" — finished! 🏁":""}</div>
-       <div class="tot">${d.pages} pages × ${d.ppp} pts/pg${d.tier_label?" · "+d.tier_label:""} &nbsp;•&nbsp; week ${fmt(d.week_pts)} · total ${fmt(d.total_pts)}</div>
+       <div class="bk">${esc(d.book_title)}${d.audiobook?" 🎧":""}${d.finished?" — finished! 🏁":""}</div>
+       <div class="tot">${d.pages} pages × ${d.ppp} pts/pg${d.tier_label?" · "+esc(d.tier_label):""} &nbsp;•&nbsp; week ${fmt(d.week_pts)} · total ${fmt(d.total_pts)}</div>
        ${warn}${evs?`<div class="ev">${evs}</div>`:""}`;
     el.result.className="result show";
     el.result.scrollIntoView({behavior:"smooth",block:"nearest"});

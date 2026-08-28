@@ -271,10 +271,32 @@ def get_daily_stats(reader, day=None):
     return dict(row)
 
 
+def get_daily_sessions(reader, day):
+    """Rows logged on a given local date, for callers that must filter them.
+
+    get_daily_stats sums every page and is right for the board. Bingo page
+    milestones are not: a 200-page comic is not 200 pages of reading, and
+    audiobooks are excluded from bingo entirely. Those callers need the
+    individual rows so they can look each book's format up in the catalogue.
+    """
+    with get_conn() as conn:
+        rows = conn.execute(
+            "SELECT book_key, pages, audiobook FROM sessions "
+            "WHERE reader=? AND session_date=? AND book_key != 'bingo-bonus'",
+            (reader, day),
+        ).fetchall()
+    return [dict(r) for r in rows]
+
+
 def get_weekly_stats(reader, today: date = None):
 
     today = today or date.today()
-    week_start = (today - timedelta(days=today.weekday())).isoformat()
+    monday = today - timedelta(days=today.weekday())
+    week_start = monday.isoformat()
+    # Upper bound matters: without it a backdated session (or a future-dated one)
+    # is summed into "this week" alongside everything since that week's Monday,
+    # so a log for last Tuesday reports a two-week total.
+    week_end = (monday + timedelta(days=7)).isoformat()
     with get_conn() as conn:
         row = conn.execute(
             """SELECT COALESCE(SUM(points),0) AS pts,
@@ -283,8 +305,9 @@ def get_weekly_stats(reader, today: date = None):
 
                       COALESCE(SUM(pages),0)   AS pages
 
-               FROM sessions WHERE reader=? AND session_date >= ?""",
-            (reader, week_start),
+               FROM sessions
+               WHERE reader=? AND session_date >= ? AND session_date < ?""",
+            (reader, week_start, week_end),
         ).fetchone()
     return dict(row)
 
@@ -547,16 +570,23 @@ def remove_bingo_points(reader: str, reason: str) -> bool:
         return True
 
 
-def get_books_finished_this_week(reader: str, today: date = None) -> int:
-    """Count distinct book_keys with finished=1 in the last 7 days."""
+def get_books_finished_this_week(
+    reader: str, today: date = None, exclude_audiobook: bool = False
+) -> int:
+    """Count distinct book_keys with finished=1 in the last 7 days.
+
+    exclude_audiobook is for bingo, where finishing by listening does not count
+    toward the "finish N books this week" squares.
+    """
     today = today or date.today()
     week_ago = (today - timedelta(days=6)).isoformat()
+    audio_clause = " AND audiobook=0" if exclude_audiobook else ""
     with get_conn() as conn:
         try:
             row = conn.execute(
                 """SELECT COUNT(DISTINCT book_key) AS cnt FROM sessions
 
-                   WHERE reader=? AND finished=1 AND session_date>=?""",
+                   WHERE reader=? AND finished=1 AND session_date>=?""" + audio_clause,
                 (reader, week_ago),
             ).fetchone()
             return row["cnt"] if row else 0
@@ -575,17 +605,27 @@ def get_book_first_session_date(reader: str, book_key: str) -> str | None:
 
 
 def add_bingo_points(reader: str, points: float, reason: str, session_date: str = None):
-    """Log a synthetic session for bingo line bonus points."""
+    """Log a synthetic session for bingo line bonus points.
+
+    session_date must be the caller's LOCAL date. date.today() is UTC inside the
+    container, so after early evening Eastern the fallback writes a future-dated
+    row: the streak walk stops at it, the bonus vanishes from today's board, and
+    on a Sunday it lands in next week.
+
+    The season is written explicitly. Omitting it let the row fall through to the
+    schema's hardcoded default, so bonuses were archived under the wrong season.
+    """
     today = session_date or date.today().isoformat()
     now = _utc_now().isoformat()
     with get_conn() as conn:
+        _migrate_sessions(conn)
         conn.execute(
             """INSERT INTO sessions
 
-               (reader,book_key,book_title,pages,minutes,ppp,points,session_date,logged_at,finished)
+               (reader,book_key,book_title,pages,minutes,ppp,points,session_date,logged_at,finished,season)
 
-               VALUES (?,?,?,?,?,?,?,?,?,0)""",
-            (reader, "bingo-bonus", reason, 0, 0, 0.0, points, today, now),
+               VALUES (?,?,?,?,?,?,?,?,?,0,?)""",
+            (reader, "bingo-bonus", reason, 0, 0, 0.0, points, today, now, CURRENT_SEASON),
         )
 
 
@@ -616,13 +656,17 @@ def set_gcal_event_id(event_type: str, reader: str, event_date: str, gcal_id: st
         )
 
 
-def get_book_total_pages(reader: str, book_key: str) -> int:
-    """Total pages logged for this book by this reader across all sessions."""
+def get_book_total_pages(reader: str, book_key: str, exclude_audiobook: bool = False) -> int:
+    """Total pages logged for this book by this reader across all sessions.
+
+    exclude_audiobook is for bingo: listening does not count toward the
+    "book with 100+ pages" style squares.
+    """
+    sql = "SELECT COALESCE(SUM(pages), 0) AS p FROM sessions WHERE reader=? AND book_key=?"
+    if exclude_audiobook:
+        sql += " AND audiobook=0"
     with get_conn() as conn:
-        row = conn.execute(
-            "SELECT COALESCE(SUM(pages), 0) AS p FROM sessions WHERE reader=? AND book_key=?",
-            (reader, book_key),
-        ).fetchone()
+        row = conn.execute(sql, (reader, book_key)).fetchone()
     return int(row["p"]) if row else 0
 
 

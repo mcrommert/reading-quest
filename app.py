@@ -166,6 +166,21 @@ def check_family_goal(prev_combined: float, new_combined: float) -> list[int]:
     return hit
 
 
+def _truthy(value) -> bool:
+    """Coerce a JSON field to a flag without bool()'s string trap.
+
+    bool("false") is True, so a client sending the string "false" would set the
+    flag. Only real booleans, 1, and explicit affirmative words count.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value == 1
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "1", "on"}
+    return False
+
+
 def _in_channel(text: str):
 
     return JSONResponse({"response_type": "in_channel", "text": text})
@@ -190,6 +205,25 @@ def _valid_slash_token(form, expected: str) -> bool:
     return hmac.compare_digest(str(supplied), str(expected))
 
 
+def _prose_pages_for_day(reader: str, day: str) -> int:
+    """Pages read that day that count toward a bingo page milestone.
+
+    Excludes audiobook sessions and illustrated formats. Books missing from the
+    catalogue are counted: an unknown book is assumed to be prose, matching how
+    scoring treats a missing format.
+    """
+    idx = _book_by_key_index()
+    total = 0
+    for row in db.get_daily_sessions(reader, day):
+        if row.get("audiobook"):
+            continue
+        fmt = (idx.get(row["book_key"]) or {}).get("format")
+        if fmt in bingo_mod.NON_PROSE_FORMATS:
+            continue
+        total += int(row["pages"] or 0)
+    return total
+
+
 def _process_bingo(
     reader: str,
     session_pages: int,
@@ -208,12 +242,18 @@ def _process_bingo(
     # db queries so they don't fall back to date.today() — which is UTC inside
     # the container and silently reads from the wrong day after ~8pm Eastern.
     today_local = date.fromisoformat(session_date)
-    daily_pages = db.get_daily_stats(reader, session_date)["pages"]
-    books_finished_week = db.get_books_finished_this_week(reader, today=today_local)
+    # Page milestones are prose-only and never count listening. get_daily_stats
+    # sums everything (right for the board, wrong here), so the day is rebuilt
+    # from its rows with the comic and audiobook pages dropped -- otherwise
+    # 49 pages of Dog Man plus 1 page of a novel checks "50 pages in one day".
+    daily_pages = _prose_pages_for_day(reader, session_date)
+    books_finished_week = db.get_books_finished_this_week(
+        reader, today=today_local, exclude_audiobook=True
+    )
     book_first_date = db.get_book_first_session_date(reader, book_key)
-    book_total_pages = db.get_book_total_pages(reader, book_key)
+    book_total_pages = db.get_book_total_pages(reader, book_key, exclude_audiobook=True)
     card_num = db.get_bingo_card_num(reader)
-    books_finished_total = _books_finished_count(reader)
+    books_finished_total = _books_finished_count(reader, exclude_audiobook=True)
     triggers = bingo_mod.auto_detect(
         reader,
         session_pages,
@@ -458,21 +498,25 @@ def _when_label(sess_date: date, today: date) -> str:
     return _fmt_short_date(sess_date)
 
 
-def _books_finished_count(reader: str, since: str = None) -> int:
-    """Count distinct book_keys where any session is finished=1."""
+def _books_finished_count(reader: str, since: str = None, exclude_audiobook: bool = False) -> int:
+    """Count distinct book_keys where any session is finished=1.
+
+    exclude_audiobook is for bingo, which does not count listening.
+    """
+    audio = " AND audiobook=0" if exclude_audiobook else ""
     with db.get_conn() as conn:
         try:
             if since:
                 row = conn.execute(
                     "SELECT COUNT(DISTINCT book_key) AS n FROM sessions "
                     "WHERE reader=? AND finished=1 AND book_key != 'bingo-bonus' "
-                    "AND session_date >= ?",
+                    "AND session_date >= ?" + audio,
                     (reader, since),
                 ).fetchone()
             else:
                 row = conn.execute(
                     "SELECT COUNT(DISTINCT book_key) AS n FROM sessions "
-                    "WHERE reader=? AND finished=1 AND book_key != 'bingo-bonus'",
+                    "WHERE reader=? AND finished=1 AND book_key != 'bingo-bonus'" + audio,
                     (reader,),
                 ).fetchone()
             return int(row["n"])
@@ -1154,8 +1198,9 @@ async def api_log(request: Request):
         finished = parsed.get("finished", False)
         audiobook = parsed.get("audiobook", False)
         date_hint = parsed.get("date")
-        m = re.search(r"lexile\s*=\s*(\d+)", body["command"].lower())
-        inline_lexile = int(m.group(1)) if m else None
+        # From the parser, which strips it out of the title. Re-scanning the raw
+        # command here used to leave "lexile=750" embedded in the book title.
+        inline_lexile = parsed.get("lexile")
         book_key = None
     # ---- structured-form path ----
     else:
@@ -1180,6 +1225,10 @@ async def api_log(request: Request):
             )
         try:
             minutes = int(body.get("minutes") or 0)
+            if minutes < 0:
+                return JSONResponse(
+                    {"ok": False, "error": "Minutes must be 0 or greater."}, status_code=400
+                )
         except (TypeError, ValueError):
             minutes = 0
         book_raw = (body.get("book") or "").strip()
@@ -1188,8 +1237,10 @@ async def api_log(request: Request):
         inline_lexile = (
             int(body["lexile"]) if str(body.get("lexile") or "").strip().isdigit() else None
         )
-        finished = bool(body.get("finished"))
-        audiobook = bool(body.get("audiobook"))
+        # bool("false") is True in Python, so a JSON string flag would mark a
+        # book finished. Accept only real booleans and explicit truthy tokens.
+        finished = _truthy(body.get("finished"))
+        audiobook = _truthy(body.get("audiobook"))
         date_hint = (body.get("date") or "").strip() or None
         if not book_raw and not book_key:
             return JSONResponse({"ok": False, "error": "Pick or type a book."}, status_code=400)
@@ -1301,7 +1352,7 @@ async def api_bingo_post(request: Request):
         )
     label = bingo_mod.square_label(reader, square_id, card_num=card_num)
 
-    want_checked = bool(body.get("checked", True))
+    want_checked = _truthy(body.get("checked", True))
     events: list[str] = []
 
     if want_checked:
@@ -1310,7 +1361,10 @@ async def api_bingo_post(request: Request):
             # Awarding runs on the card the square belongs to. Read the card number
             # back afterwards: completing the final line rolls the reader onto a new
             # card, which resets the grid the browser is holding.
-            _award_bingo_lines(reader, events, card_num=card_num)
+            # Local date, not the container's UTC one: without it an evening
+            # tap writes a future-dated bonus row that breaks the streak walk
+            # and lands the points in tomorrow (or next week).
+            _award_bingo_lines(reader, events, session_date=_today().isoformat(), card_num=card_num)
     else:
         changed = db.bingo_uncheck(reader, square_id)
         if changed:
@@ -1357,9 +1411,9 @@ async def slash_read(request: Request):
     date_hint = parsed.get("date")
     audiobook = parsed.get("audiobook", False)
     book, score = find_book(book_raw)
-    raw_lower = text.lower()
-    lex_m = re.search(r"lexile\s*=\s*(\d+)", raw_lower)
-    inline_lexile = int(lex_m.group(1)) if lex_m else None
+    # From the parser, which strips it out of the title. Re-scanning the raw
+    # text here used to leave "lexile=750" embedded in the book title and key.
+    inline_lexile = parsed.get("lexile")
     if book is None:
         safe = book_raw.replace('"', "")
         title = book_raw.strip()
@@ -1771,5 +1825,10 @@ async def slash_bingo(request: Request):
     if not ok:
         return _ephemeral(f"**{label}** is already checked — nothing to do.")
     out_lines = [f"✅ Checked **{label}** for {reader.capitalize()}!"]
-    _award_bingo_lines(reader, out_lines, card_num=db.get_bingo_card_num(reader))
+    _award_bingo_lines(
+        reader,
+        out_lines,
+        session_date=_today().isoformat(),
+        card_num=db.get_bingo_card_num(reader),
+    )
     return _in_channel("\n".join(out_lines))

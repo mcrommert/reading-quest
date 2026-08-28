@@ -93,6 +93,15 @@ def parse_read_command(text: str) -> dict:
     if m:
         audiobook = True
         rest = (rest[: m.start()] + rest[m.end() :]).strip()
+    # --- Extract lexile (for unknown-book flow) ---
+    # Must happen here, not by re-scanning the raw text later: whatever is left
+    # after these extractions becomes the book title, so an un-stripped
+    # "lexile=750" ends up baked into the stored title and key.
+    lexile = None
+    m = re.search(r"lexile\s*=\s*(\d+)", rest, re.I)
+    if m:
+        lexile = int(m.group(1))
+        rest = (rest[: m.start()] + rest[m.end() :]).strip()
     # --- Extract format hint (for unknown-book flow) ---
     fmt_hint = None
     m = re.search(r"format\s*=\s*(\w+)", rest, re.I)
@@ -113,7 +122,11 @@ def parse_read_command(text: str) -> dict:
     if minutes is None:
         minutes, rest = _extract_int(r"\b(\d+)m\b", rest)
     # --- What remains is the book title ---
-    book_raw = rest.strip().strip('"').strip("'").strip()
+    # strip() with a cut set removes matching characters from BOTH ends, but only
+    # while they are outermost -- so a title left as 'Book"  lexile=750' kept its
+    # stray quote. Extracting every key=value above is what makes this reliable;
+    # the explicit re.sub is a backstop for stray quotes anywhere at the edges.
+    book_raw = re.sub(r"""^[\s"']+|[\s"']+$""", "", rest)
     # --- Validate ---
     if not book_raw:
         return {"error": _usage()}
@@ -138,6 +151,7 @@ def parse_read_command(text: str) -> dict:
         "finished": finished,
         "date": date_val,
         "audiobook": audiobook,
+        "lexile": lexile,
     }
 
 
