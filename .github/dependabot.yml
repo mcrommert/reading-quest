@@ -1,0 +1,29 @@
+# Dependabot: weekly checks for newer versions. Security fixes are raised
+# separately and immediately (repo setting "Dependabot security updates").
+# PRs run the test job only; nothing publishes until a PR is merged.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-and-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Scoring parity depends on rapidfuzz; bump it deliberately, not weekly.
+      - dependency-name: rapidfuzz
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]
