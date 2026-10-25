@@ -136,6 +136,8 @@ jobs:
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
+          # Without this, SARIF output ignores `severity` and reports everything.
+          limit-severities-for-sarif: 'true'
           exit-code: '0'
 
       - name: Upload results to code scanning
