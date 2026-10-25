@@ -6,6 +6,10 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
+  # Weekly rebuild so the image picks up base-image (Debian) security patches
+  # even when no code changes. Mondays 09:17 UTC. Deploys stay manual.
+  schedule:
+    - cron: '17 9 * * 1'
   workflow_dispatch:
 
 env:
@@ -34,6 +38,27 @@ jobs:
       - name: Run tests
         run: pytest tests/ -q
 
+  # Known-vulnerability check of the pinned Python dependencies. Deliberately
+  # NOT a gate for publishing: a new advisory with no fixed version yet must
+  # not stop the weekly rebuild from shipping OS patches. A failure here turns
+  # the run red, which emails the repo owner. To accept a specific advisory,
+  # add `--ignore-vuln <ID>` with a comment saying why.
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: pip-audit
+        run: |
+          pip install pip-audit==2.10.1
+          pip-audit -r requirements.txt --desc
+
   build-and-push:
     needs: test
     # Pull requests validate through the test job; only pushes publish.
@@ -42,6 +67,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -59,6 +86,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Production stacks pin `sha-<commit>` tags, so those must never move.
+      # Only a push creates one; a scheduled or manual rebuild of the same
+      # commit gets a dated `weekly-YYYYMMDD` tag (plus `latest`) instead.
       - name: Derive image tags + labels
         id: meta
         uses: docker/metadata-action@v5
@@ -69,15 +99,57 @@ jobs:
             type=ref,event=branch
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
-            type=sha,format=short
+            type=sha,format=short,enable=${{ github.event_name == 'push' }}
+            type=raw,value=weekly-{{date 'YYYYMMDD'}},enable=${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
       - name: Build and push
+        id: build
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64,linux/arm64
           push: true
+          # Always fetch the newest python:3.12-slim so OS patches land.
+          pull: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Scan the image that was just published (by digest, so it is exactly that
+  # build). Full HIGH/CRITICAL results go to the repo's Security tab; the
+  # second step turns the run red only for issues that already have a fix,
+  # which a rebuild or a dependency bump can actually resolve.
+  scan:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      SCAN_REF: ghcr.io/${{ github.repository }}@${{ needs.build-and-push.outputs.digest }}
+    steps:
+      - name: Trivy scan (SARIF for the Security tab)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.SCAN_REF }}
+          format: sarif
+          output: trivy-results.sarif
+          severity: HIGH,CRITICAL
+          exit-code: '0'
+
+      - name: Upload results to code scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-results.sarif
+          category: trivy-image
+
+      - name: Trivy gate (fixable HIGH/CRITICAL only)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.SCAN_REF }}
+          format: table
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
