@@ -12,7 +12,8 @@ WORKDIR /app
 
 # Pull in Debian security fixes the base image hasn't picked up yet
 # (the Trivy gate fails on fixable HIGH/CRITICAL OS packages).
-RUN apt-get update && apt-get upgrade -y --no-install-recommends \n    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get upgrade -y --no-install-recommends \
+    && rm -rf /var/lib/apt/lists/*
 
 # Install deps first so they cache across code changes
 COPY requirements.txt .
