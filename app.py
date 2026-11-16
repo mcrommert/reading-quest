@@ -534,7 +534,7 @@ def _recent_sessions_enriched(
     with db.get_conn() as conn:
         if since:
             rows = conn.execute(
-                """SELECT book_key, book_title, pages, minutes, points, session_date, logged_at
+                """SELECT book_key, book_title, pages, minutes, points, session_date, logged_at, finished
 
                    FROM sessions
 
@@ -545,7 +545,7 @@ def _recent_sessions_enriched(
             ).fetchall()
         else:
             rows = conn.execute(
-                """SELECT book_key, book_title, pages, minutes, points, session_date, logged_at
+                """SELECT book_key, book_title, pages, minutes, points, session_date, logged_at, finished
 
                    FROM sessions
 
@@ -574,12 +574,41 @@ def _recent_sessions_enriched(
         sess_d = date.fromisoformat(s["session_date"])
         out.append(
             {
+                "date": s["session_date"],
+                "finished": bool(s["finished"]),
                 "title": s["book_title"],
                 "when_label": _when_label(sess_d, today),
                 "when_time": _fmt_local_time(s["logged_at"]),
                 "pages": int(s["pages"]),
                 "points": float(s["points"]),
                 "detail_meta": detail,
+            }
+        )
+    return out
+
+
+def _last_days(reader: str, today: date, since: str = None, n: int = 7) -> list[dict]:
+    """Pages and points for each of the last n days, oldest first, ending today.
+
+    A rolling window, unlike week.by_day (Mon..Sun): on a Monday it still shows the
+    weekend. Points include bingo bonuses, like the totals. Days before the season
+    started count as empty.
+    """
+    out = []
+    for i in range(n - 1, -1, -1):
+        d = today - timedelta(days=i)
+        if since and d.isoformat() < since:
+            ds = {"pages": 0, "pts": 0, "sessions": 0}
+        else:
+            ds = db.get_daily_stats(reader, d.isoformat())
+        out.append(
+            {
+                "date": d.isoformat(),
+                "name": _DAY_SHORT[d.weekday()],
+                "pages": int(ds["pages"]),
+                "pts": round(float(ds["pts"]), 2),
+                "sessions": int(ds["sessions"]),
+                "is_today": d == today,
             }
         )
     return out
@@ -688,6 +717,11 @@ def _build_player(p_cfg: dict, today: date, book_idx: dict, stats_from: str = No
             "grid_size": 5,
         },
         "recent": _recent_sessions_enriched(key, limit=3, book_idx=book_idx, since=stats_from),
+        # Rolling last 7 days (ending today) for Family Hub's reading screen.
+        "last7": _last_days(key, today, since=stats_from),
+        "log7": _recent_sessions_enriched(
+            key, limit=50, book_idx=book_idx, since=max(filter(None, [stats_from, (today - timedelta(days=6)).isoformat()]))
+        ),
     }
 
 
