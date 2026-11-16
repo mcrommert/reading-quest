@@ -102,3 +102,38 @@ def test_core_routes_survive():
         "/slash/bingo",
     ):
         assert path in routes, f"{path} disappeared"
+
+
+def test_last7_is_a_rolling_week_ending_today(tmp_path, monkeypatch):
+    """Family Hub's reading screen: the last 7 days (not Mon..Sun) and every session in them."""
+    import importlib
+    from datetime import timedelta
+
+    monkeypatch.setenv("DB_PATH", str(tmp_path / "last7.db"))
+    import db as db_module
+
+    importlib.reload(db_module)
+    db_module.init_db()
+    monkeypatch.setattr(app_module, "db", db_module)
+    today = app_module._today()
+    key = app_module.PLAYERS_CONFIG[0]["key"]
+    with db_module.get_conn() as conn:
+        for days_ago, pages, pts in [(0, 20, 39.0), (3, 70, 136.5), (3, 10, 19.5), (9, 50, 99.0)]:
+            d = (today - timedelta(days=days_ago)).isoformat()
+            conn.execute(
+                "INSERT INTO sessions (reader, book_key, book_title, pages, minutes, ppp, points, session_date, logged_at)"
+                " VALUES (?, 'k', 'Some Book', ?, 0, 1.0, ?, ?, ?)",
+                (key, pages, pts, d, d + "T12:00:00"),
+            )
+    monkeypatch.setattr(app_module, "SUMMER_START", (today - timedelta(days=30)).isoformat())
+    monkeypatch.setattr(app_module, "SUMMER_END", (today + timedelta(days=30)).isoformat())
+    player = next(p for p in app_module._build_board_payload()["players"] if p["key"] == key)
+
+    last7 = player["last7"]
+    assert [d["date"] for d in last7] == [(today - timedelta(days=i)).isoformat() for i in range(6, -1, -1)]
+    assert last7[-1]["is_today"] and last7[-1]["pages"] == 20 and last7[-1]["pts"] == 39.0
+    assert last7[3]["pages"] == 80 and last7[3]["sessions"] == 2
+    # The session from 9 days ago is outside the window.
+    assert sum(d["pages"] for d in last7) == 100
+    assert sorted(s["pages"] for s in player["log7"]) == [10, 20, 70]
+    assert all("date" in s and "finished" in s for s in player["log7"])
