@@ -1165,6 +1165,137 @@ def perform_log(
     }
 
 
+MAX_POSITION_PAGE = 5000
+
+
+def perform_position_log(
+    reader, book, page, minutes, finished, audiobook, session_date_local, today_local, label
+) -> dict:
+    """Position mode: move the day's automatic row for this book to `page`.
+
+    See db.upsert_position_row for the arithmetic. Side effects (milestones,
+    family goal, bingo, calendar) run only when the row gained pages or the
+    book flipped to finished, so a repeated or stale post never re-awards.
+    """
+    day = session_date_local.isoformat()
+    prev_combined = sum(db.get_total_stats(k)["pts"] for k in READER_KEYS)
+    prev_total = db.get_total_stats(reader)["pts"]
+
+    def _score(row_pages):
+        r = scoring.compute_points(book, reader, row_pages, audiobook=audiobook)
+        return r["ppp"], r["points"]
+
+    w = db.upsert_position_row(
+        reader, book["key"], book["title"], page, minutes, day, finished, audiobook, _score,
+        label, max_added=MAX_PAGES,
+    )
+    res = {
+        "reader": reader,
+        "book_title": book["title"],
+        "logged": w["changed"],
+        "pages_added": w["pages_added"],
+        "row_pages": w["row_pages"],
+        "page": page,
+        "other_pages": w["other_pages"],
+        "session_id": w["session_id"],
+        "pages": w["row_pages"],
+        "minutes": w["minutes"],
+        "finished": w["finished"],
+        "audiobook": w["audiobook"],
+        "session_date": day,
+        "events": [],
+    }
+    if not w["changed"]:
+        return res
+    if w["pages_added"] <= 0 and not w["finished_flipped"]:
+        return res  # minutes-only update: nothing to award or announce
+    events = res["events"]
+    total = db.get_total_stats(reader)
+    for msg in check_milestones(reader, prev_total, total["pts"]):
+        gcal.post_milestone(reader, msg, total["pts"], session_date_local)
+        events.append(_plain(msg))
+    new_combined = sum(db.get_total_stats(k)["pts"] for k in READER_KEYS)
+    for pct in check_family_goal(prev_combined, new_combined):
+        events.append(f"Family goal {pct}% reached: {fmt_pts(new_combined)} / {FAMILY_GOAL} pts!")
+        gcal.post_family_goal(pct, new_combined, FAMILY_GOAL, session_date_local)
+    # A position row's "sitting" is that book's whole day. bingo_check is
+    # idempotent (an already-checked square returns False and awards nothing).
+    for bl in (
+        _process_bingo(
+            reader, w["row_pages"], w["minutes"], book, w["finished"], book["key"], day,
+            audiobook=w["audiobook"],
+        )
+        or []
+    ):
+        line = _plain(bl)
+        if line:
+            events.append(line)
+    _post_realtime_summaries(reader, today_local)
+    backdated = session_date_local != today_local
+    if backdated:
+        _post_realtime_summaries(reader, session_date_local)
+    daily = db.get_daily_stats(reader, day)
+    weekly = db.get_weekly_stats(reader, today=session_date_local)
+    res.update(
+        ppp=w["ppp"],
+        points=w["points"],
+        daily_pages=daily["pages"],
+        week_pts=weekly["pts"],
+        total_pts=total["pts"],
+        backdated=backdated,
+    )
+    return res
+
+
+def _position_log(request_body: dict):
+    """Validate and run a position-mode post. Returns a JSONResponse."""
+    body = request_body
+
+    def bad(msg):
+        return JSONResponse({"ok": False, "error": msg}, status_code=400)
+
+    def as_int(v):
+        if isinstance(v, bool):
+            return None
+        try:
+            return int(v)
+        except (TypeError, ValueError):
+            return None
+
+    reader = resolve_reader(body.get("reader", "") or "")
+    if not reader:
+        return bad("Pick a reader.")
+    book_key = (body.get("book_key") or "").strip() if isinstance(body.get("book_key"), str) else ""
+    if not book_key:
+        return bad("book_key is required for position logging.")
+    page = as_int(body.get("page"))
+    if page is None or page < 0:
+        return bad("page must be an integer 0 or greater.")
+    if page > MAX_POSITION_PAGE:
+        return bad(f"page looks too large (max {MAX_POSITION_PAGE}).")
+    minutes = as_int(body.get("minutes") if body.get("minutes") is not None else 0)
+    if minutes is None or minutes < 0:
+        return bad("minutes must be an integer 0 or greater.")
+    book = _book_by_key(book_key)
+    if book is None:
+        return bad("That book is no longer available.")
+    today_local = _today()
+    date_hint = (str(body.get("date") or "")).strip() or None
+    session_date_local = _parse_session_date(date_hint, today_local)
+    if session_date_local is None:
+        return bad("Couldn’t understand the date (or it’s in the future). Nothing logged.")
+    label = (str(body.get("source") or "")).strip()[:40] or "auto"
+    try:
+        res = perform_position_log(
+            reader, book, page, minutes, _truthy(body.get("finished")),
+            _truthy(body.get("audiobook")), session_date_local, today_local, label,
+        )
+    except ValueError:
+        # One post would add more than MAX_PAGES pages (the manual-entry cap).
+        return bad(f"That jump looks too large (max {MAX_PAGES} pages per post). Nothing logged.")
+    return JSONResponse({"ok": True, **res})
+
+
 @app.get("/log", include_in_schema=False)
 async def log_page():
     return FileResponse(BOARD_DIR / "log.html", media_type="text/html")
@@ -1222,6 +1353,9 @@ async def api_log(request: Request):
         return JSONResponse({"ok": False, "error": "Expected a JSON object."}, status_code=400)
     if not _log_pin_ok(request, body):
         return JSONResponse({"ok": False, "error": "Wrong or missing PIN."}, status_code=403)
+    # ---- position mode: absolute book position from an automated client ----
+    if "page" in body and not body.get("command"):
+        return _position_log(body)
     # ---- command-bar path: same syntax as the /read slash command ----
     if body.get("command"):
         parsed = parse_read_command(body["command"])

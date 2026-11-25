@@ -186,6 +186,44 @@ paths — everything works from the browser with nothing else installed. Set
 `LOG_PIN` to require a PIN before logging (recommended if the app is reachable
 from outside your home network).
 
+### Position logging (`POST /api/log` with `page`)
+
+For automated clients (e.g. a Kindle sync) that know the print page a reader is
+*on* rather than how many pages they read this sitting. Same PIN check as the
+other modes (`X-Log-Pin` header or `pin` in the body). Triggered when the JSON
+body has `page` and no `command`:
+
+```json
+{"reader": "michael", "book_key": "sw-jedi-apprentice-the-fight-for-truth",
+ "page": 68, "minutes": 87, "date": "2026-11-25",
+ "finished": false, "audiobook": false, "source": "bookorbit"}
+```
+
+- `book_key` is required (no title matching); an unknown key is a 400. `pages`
+  is not used. `page` is an integer 0-5000 (absolute position), `minutes` an
+  integer >= 0 (absolute total for that book on `date`), `date` parses like the
+  other modes and may not be in the future, `source` is an optional label
+  (default `auto`, max 40 chars).
+- reading-bot keeps **one automatic row per reader, book and day**
+  (`sessions.source = 'position'`, label in `source_label`; a partial unique
+  index enforces it). `other` is the sum of `pages` on every *other* row for
+  that reader and book (all dates and seasons, manual rows included, never
+  modified), counting only rows with the same audiobook flag as the day's
+  automatic row. The row's pages are `max(existing, page - other)`, so a
+  position that moves backwards never removes pages. Minutes are
+  `max(existing, minutes)`; `finished` is sticky. Points are recomputed from the
+  row's total pages; `season` is set on insert and left alone on update.
+- Everything happens in one transaction. A post that changes nothing (or has no
+  row and nothing to log) returns `{"ok": true, "logged": false, "pages_added": 0, ...}`
+  and runs no side effects. A post that only raises `minutes` updates the row
+  quietly. Milestones, family goal, bingo and calendar updates run only when
+  the row gained pages or the book just became finished. `pages_added` greater
+  than 2000 in one post is a 400.
+- Response: `ok`, `logged`, `pages_added`, `row_pages`, `page`, `other_pages`,
+  `session_id`, plus `reader`, `book_title`, `minutes`, `finished`, `audiobook`,
+  `session_date`, `events`, and (when something was written and awarded) `ppp`,
+  `points`, `daily_pages`, `week_pts`, `total_pts`, `backdated`.
+
 ## Configuration
 
 All configuration is via environment variables — see [`.env.example`](.env.example).
