@@ -177,6 +177,19 @@ _SESSION_MIGRATIONS = (
     "finished INTEGER NOT NULL DEFAULT 0",
     "audiobook INTEGER NOT NULL DEFAULT 0",
     f"season TEXT NOT NULL DEFAULT '{LEGACY_SEASON}'",
+    # 'manual' = typed in by a person (and every pre-existing row);
+    # 'position' = the one automatic row per reader/book/day kept in step with a
+    # device's reported page (see upsert_position_row). source_label is the
+    # client's own tag (e.g. 'bookorbit') for position rows.
+    "source TEXT NOT NULL DEFAULT 'manual'",
+    "source_label TEXT",
+)
+
+# At most one position row per reader/book/day. Partial, so manual rows (any
+# number per day) are untouched. Created after the columns exist.
+_POSITION_INDEX = (
+    "CREATE UNIQUE INDEX IF NOT EXISTS ux_sessions_position_day "
+    "ON sessions (reader, book_key, session_date) WHERE source='position'"
 )
 
 
@@ -190,6 +203,10 @@ def _migrate_sessions(conn):
             conn.execute(f"ALTER TABLE sessions ADD COLUMN {spec}")
         except Exception:
             pass
+    try:
+        conn.execute(_POSITION_INDEX)
+    except Exception:
+        pass
 
 
 def init_db():
@@ -249,6 +266,109 @@ def log_session(
                 CURRENT_SEASON,
             ),
         )
+
+
+def upsert_position_row(
+    reader,
+    book_key,
+    book_title,
+    page,
+    minutes,
+    session_date: str,
+    finished: bool,
+    audiobook: bool,
+    score_fn,
+    label: str = "auto",
+    max_added: int = None,
+) -> dict:
+    """Move the day's automatic row for this reader+book to the reported page.
+
+    All reads and the write happen inside one BEGIN IMMEDIATE transaction, so
+    two concurrent posts serialise and cannot both insert.
+
+    other_pages = pages already logged for this reader+book on every other row
+    (all dates and seasons, manual rows included, never the auto row itself),
+    restricted to rows with the same audiobook flag as the auto row/post, since
+    a print page position is not comparable with listening pages.
+    Row pages are monotonic: max(existing, page - other).
+
+    score_fn(row_pages) -> (ppp, points). Returns a dict describing what
+    happened; "changed" is False when nothing was written. If max_added is set
+    and one post would add more pages than that, ValueError is raised and
+    nothing is written.
+    """
+    now = _utc_now().isoformat()
+    conn = get_conn()
+    conn.isolation_level = None
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        try:
+            _migrate_sessions(conn)
+            row = conn.execute(
+                """SELECT id, pages, minutes, finished, audiobook FROM sessions
+                   WHERE reader=? AND book_key=? AND session_date=? AND source='position'""",
+                (reader, book_key, session_date),
+            ).fetchone()
+            audio = int(row["audiobook"]) if row else (1 if audiobook else 0)
+            other = conn.execute(
+                """SELECT COALESCE(SUM(pages), 0) AS p FROM sessions
+                   WHERE reader=? AND book_key=? AND audiobook=? AND id != ?""",
+                (reader, book_key, audio, row["id"] if row else -1),
+            ).fetchone()["p"]
+            old_pages = int(row["pages"]) if row else 0
+            old_minutes = int(row["minutes"]) if row else 0
+            old_fin = bool(row["finished"]) if row else False
+            new_pages = max(old_pages, max(0, page - other))
+            if max_added is not None and new_pages - old_pages > max_added:
+                raise ValueError(f"pages_added {new_pages - old_pages} exceeds {max_added}")
+            new_minutes = max(old_minutes, minutes)
+            new_fin = old_fin or bool(finished)
+            out = {
+                "session_id": row["id"] if row else None,
+                "other_pages": int(other),
+                "old_pages": old_pages,
+                "row_pages": new_pages,
+                "minutes": new_minutes,
+                "finished": new_fin,
+                "finished_flipped": new_fin and not old_fin,
+                "pages_added": new_pages - old_pages,
+                "audiobook": bool(audio),
+                "created": False,
+                "changed": False,
+            }
+            if row is None and new_pages == 0 and not new_fin:
+                conn.execute("COMMIT")
+                return out
+            if row and (new_pages, new_minutes, new_fin) == (old_pages, old_minutes, old_fin):
+                conn.execute("COMMIT")
+                return out
+            ppp, points = score_fn(new_pages)
+            if row:
+                conn.execute(
+                    """UPDATE sessions SET pages=?, minutes=?, ppp=?, points=?, finished=?,
+                       logged_at=?, source_label=? WHERE id=?""",
+                    (new_pages, new_minutes, ppp, points, 1 if new_fin else 0, now, label, row["id"]),
+                )
+            else:
+                cur = conn.execute(
+                    """INSERT INTO sessions
+                       (reader,book_key,book_title,pages,minutes,ppp,points,session_date,
+                        logged_at,finished,audiobook,season,source,source_label)
+                       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,'position',?)""",
+                    (reader, book_key, book_title, new_pages, new_minutes, ppp, points,
+                     session_date, now, 1 if new_fin else 0, audio, CURRENT_SEASON, label),
+                )
+                out["session_id"] = cur.lastrowid
+                out["created"] = True
+            out["changed"] = True
+            out["ppp"], out["points"] = ppp, points
+            conn.execute("COMMIT")
+            return out
+        except BaseException:
+            conn.execute("ROLLBACK")
+            raise
+    finally:
+        conn.close()
 
 
 def get_daily_stats(reader, day=None):
