@@ -130,12 +130,19 @@ def find_book(query: str):
     norm_q = normalize(query)
     if norm_q in idx:
         return idx[norm_q], 100
-    result = process.extractOne(
-        norm_q, list(idx.keys()), scorer=fuzz.token_set_ratio, score_cutoff=72
+    # token_set_ratio scores any alias whose words are a subset of the query as
+    # 100, so a one-word alias ("truth" for LionBoy: The Truth) used to tie with
+    # the real title for "fight for truth" and win on catalog order. Among the
+    # top-scoring aliases, prefer the one closest to the whole query.
+    results = process.extract(
+        norm_q, list(idx.keys()), scorer=fuzz.token_set_ratio, score_cutoff=72, limit=None
     )
-    if result is None:
+    if not results:
         return None, 0
-    matched_alias, score, _ = result
+    top = max(r[1] for r in results)
+    matched_alias, score, _ = max(
+        (r for r in results if r[1] == top), key=lambda r: (fuzz.ratio(norm_q, r[0]), len(r[0]))
+    )
     return idx[matched_alias], score
 
 
