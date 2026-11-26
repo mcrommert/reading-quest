@@ -23,7 +23,7 @@ except ImportError:
 
 import scoring, db, gcal, bingo as bingo_mod
 
-from parser import parse_read_command, normalize, MAX_PAGES
+from parser import parse_read_command, normalize, MAX_PAGES, MAX_POSITION_PAGE
 
 from rapidfuzz import process, fuzz
 
@@ -1165,17 +1165,17 @@ def perform_log(
     }
 
 
-MAX_POSITION_PAGE = 5000
-
-
 def perform_position_log(
-    reader, book, page, minutes, finished, audiobook, session_date_local, today_local, label
+    reader, book, page, minutes, finished, audiobook, session_date_local, today_local, label,
+    minutes_mode="max",
 ) -> dict:
     """Position mode: move the day's automatic row for this book to `page`.
 
-    See db.upsert_position_row for the arithmetic. Side effects (milestones,
-    family goal, bingo, calendar) run only when the row gained pages or the
-    book flipped to finished, so a repeated or stale post never re-awards.
+    See db.upsert_position_row for the arithmetic (and `minutes_mode`: 'max' for
+    the scrobbler's absolute minutes, 'add' for a person's typed minutes).
+    Side effects (milestones, family goal, bingo, calendar) run only when the
+    row gained pages or the book flipped to finished, so a repeated or stale
+    post never re-awards.
     """
     day = session_date_local.isoformat()
     prev_combined = sum(db.get_total_stats(k)["pts"] for k in READER_KEYS)
@@ -1187,7 +1187,7 @@ def perform_position_log(
 
     w = db.upsert_position_row(
         reader, book["key"], book["title"], page, minutes, day, finished, audiobook, _score,
-        label, max_added=MAX_PAGES,
+        label, max_added=MAX_PAGES, minutes_mode=minutes_mode,
     )
     res = {
         "reader": reader,
@@ -1197,6 +1197,9 @@ def perform_position_log(
         "row_pages": w["row_pages"],
         "page": page,
         "other_pages": w["other_pages"],
+        "logged_pages": w["other_pages"] + w["row_pages"],
+        "minutes_posted": minutes,
+        "finished_flipped": w["finished_flipped"],
         "session_id": w["session_id"],
         "pages": w["row_pages"],
         "minutes": w["minutes"],
@@ -1239,6 +1242,7 @@ def perform_position_log(
     res.update(
         ppp=w["ppp"],
         points=w["points"],
+        points_added=round(w["points"] - w["old_points"], 2),
         daily_pages=daily["pages"],
         week_pts=weekly["pts"],
         total_pts=total["pts"],
@@ -1247,8 +1251,56 @@ def perform_position_log(
     return res
 
 
+def _plural(n, word="page"):
+    return f"{n} {word}" + ("" if n == 1 else "s")
+
+
+def _position_message(res: dict) -> str:
+    """One plain-text sentence describing a position post that added no pages
+    (or the pages it did add), shared by the slash reply and the web result."""
+    title, page = res["book_title"], res["page"]
+    known = res.get("known_pages")
+    of_n = f" of {known}" if known else ""
+    if res["pages_added"] > 0:
+        return f"+{_plural(res['pages_added'])} (now on page {page}){of_n}"
+    msg = f"Already logged {_plural(res['logged_pages'])} of {title}; page {page} adds nothing."
+    if res.get("logged") and res.get("minutes_posted"):
+        msg += f" Added {_plural(res['minutes_posted'], 'minute')}."
+    return msg
+
+
+def _position_json(
+    reader, book, page, minutes, finished, audiobook, session_date_local, today_local, label, mode
+):
+    """Run a position post and shape the JSON reply. Used by the scrobbler path,
+    the web form and the command bar."""
+    try:
+        res = perform_position_log(
+            reader, book, page, minutes, finished, audiobook, session_date_local, today_local,
+            label, minutes_mode=mode,
+        )
+    except ValueError:
+        # One post would add more than MAX_PAGES pages (the manual-entry cap).
+        return JSONResponse(
+            {
+                "ok": False,
+                "error": f"That jump looks too large (max {MAX_PAGES} pages per post). Nothing logged.",
+            },
+            status_code=400,
+        )
+    if mode == "add":  # humans get a ready-made sentence; scrobbler replies are unchanged
+        res["message"] = _position_message(res)
+    return JSONResponse({"ok": True, **res})
+
+
 def _position_log(request_body: dict):
-    """Validate and run a position-mode post. Returns a JSONResponse."""
+    """Validate and run a position-mode post. Returns a JSONResponse.
+
+    The scrobbler contract: `book_key` is required and `minutes` is the day's
+    absolute total ('max'). The web form may instead send a typed `book` (same
+    resolution and new-book `needs` flow as the pages path) and/or
+    `minutes_mode: "add"` so typed minutes accumulate.
+    """
     body = request_body
 
     def bad(msg):
@@ -1266,7 +1318,8 @@ def _position_log(request_body: dict):
     if not reader:
         return bad("Pick a reader.")
     book_key = (body.get("book_key") or "").strip() if isinstance(body.get("book_key"), str) else ""
-    if not book_key:
+    book_raw = (body.get("book") or "").strip() if isinstance(body.get("book"), str) else ""
+    if not book_key and not book_raw:
         return bad("book_key is required for position logging.")
     page = as_int(body.get("page"))
     if page is None or page < 0:
@@ -1276,24 +1329,32 @@ def _position_log(request_body: dict):
     minutes = as_int(body.get("minutes") if body.get("minutes") is not None else 0)
     if minutes is None or minutes < 0:
         return bad("minutes must be an integer 0 or greater.")
-    book = _book_by_key(book_key)
-    if book is None:
-        return bad("That book is no longer available.")
+    mode = body.get("minutes_mode")
+    if mode is None:
+        mode = "max" if book_key else "add"
+    if mode not in ("max", "add"):
+        return bad("minutes_mode must be 'max' or 'add'.")
+    book = None
+    if book_key:
+        book = _book_by_key(book_key)
+        if book is None:
+            return bad("That book is no longer available.")
     today_local = _today()
     date_hint = (str(body.get("date") or "")).strip() or None
     session_date_local = _parse_session_date(date_hint, today_local)
     if session_date_local is None:
         return bad("Couldn’t understand the date (or it’s in the future). Nothing logged.")
-    label = (str(body.get("source") or "")).strip()[:40] or "auto"
-    try:
-        res = perform_position_log(
-            reader, book, page, minutes, _truthy(body.get("finished")),
-            _truthy(body.get("audiobook")), session_date_local, today_local, label,
-        )
-    except ValueError:
-        # One post would add more than MAX_PAGES pages (the manual-entry cap).
-        return bad(f"That jump looks too large (max {MAX_PAGES} pages per post). Nothing logged.")
-    return JSONResponse({"ok": True, **res})
+    if book is None:
+        fmt_hint = (str(body.get("format") or "")).strip() or None
+        lex = str(body.get("lexile") or "").strip()
+        book, needs = resolve_book_for_log(book_raw, fmt_hint, int(lex) if lex.isdigit() else None)
+        if needs:
+            return JSONResponse({"ok": False, "needs": needs})
+    label = (str(body.get("source") or "")).strip()[:40] or ("auto" if mode == "max" else "web")
+    return _position_json(
+        reader, book, page, minutes, _truthy(body.get("finished")),
+        _truthy(body.get("audiobook")), session_date_local, today_local, label, mode,
+    )
 
 
 @app.get("/log", include_in_schema=False)
@@ -1362,6 +1423,7 @@ async def api_log(request: Request):
         if "error" in parsed:
             return JSONResponse({"ok": False, "error": _plain(parsed["error"])}, status_code=400)
         reader, pages, minutes = parsed["reader"], parsed["pages"], parsed["minutes"]
+        position = parsed.get("position")
         book_raw, fmt_hint = parsed["book_raw"], parsed.get("format_hint")
         finished = parsed.get("finished", False)
         audiobook = parsed.get("audiobook", False)
@@ -1372,6 +1434,7 @@ async def api_log(request: Request):
         book_key = None
     # ---- structured-form path ----
     else:
+        position = None
         reader = resolve_reader(body.get("reader", ""))
         if not reader:
             return JSONResponse({"ok": False, "error": "Pick a reader."}, status_code=400)
@@ -1432,6 +1495,13 @@ async def api_log(request: Request):
                 "error": f"Couldn’t understand the date (or it’s in the future). Nothing logged.",
             },
             status_code=400,
+        )
+    if position is not None:
+        # "on page N" typed in the command bar: same day row as the scrobbler,
+        # but typed minutes add up.
+        return _position_json(
+            reader, book, position, minutes, finished, audiobook, session_date_local,
+            today_local, "web", "add",
         )
     res = perform_log(
         reader, book, pages, minutes, finished, audiobook, session_date_local, today_local
@@ -1554,6 +1624,49 @@ async def api_bingo_post(request: Request):
     )
 
 
+def _slash_position_reply(
+    reader, book, position, minutes, finished, audiobook, session_date_local, today_local,
+    ug_warning,
+):
+    """`/read ... on page N`: move the day's position row and word the reply."""
+    try:
+        res = perform_position_log(
+            reader, book, position, minutes, finished, audiobook, session_date_local,
+            today_local, "mattermost", minutes_mode="add",
+        )
+    except ValueError:
+        return _ephemeral(
+            f"That jump looks too large (max {MAX_PAGES} pages in one go). _Nothing was logged._"
+        )
+    res["known_pages"] = book.get("pages") or book.get("page_count")
+    backdated = session_date_local != today_local
+    day_label = _fmt_today_label(session_date_local) if backdated else "Today"
+    head = (
+        f"📖 **{reader.capitalize()} — {book['title']}**"
+        + (" 🎧" if res["audiobook"] else "")
+        + (" _(finished!)_" if res["finished"] else "")
+        + (f" _(logged for {day_label})_" if backdated else "")
+    )
+    if not res["logged"]:
+        return _ephemeral(_position_message(res))
+    if res["pages_added"] <= 0 and not res["finished_flipped"]:
+        return _ephemeral(f"{head}\n{_position_message(res)}")
+    lines = [head, _position_message(res)]
+    if res["pages_added"] > 0:
+        lines[-1] += f" · {res['ppp']} pts/pg · **+{fmt_pts(res['points_added'])} pts**"
+        if res["audiobook"]:
+            full = scoring.compute_points(book, reader, res["row_pages"], audiobook=True)
+            lines[-1] += f"  ·  🎧 _audiobook: ¼ points_ (was {full.get('full_ppp')} pts/pg)"
+    lines.append(
+        f"{day_label}: {res['daily_pages']} pages · "
+        f"Week: {fmt_pts(res['week_pts'])} pts · Total: {fmt_pts(res['total_pts'])} pts"
+    )
+    if ug_warning:
+        lines.append(ug_warning)
+    lines.extend(res["events"])
+    return _in_channel("\n".join(lines))
+
+
 @app.post("/slash/read")
 async def slash_read(request: Request):
 
@@ -1563,7 +1676,8 @@ async def slash_read(request: Request):
     text = (form.get("text") or "").strip()
     if not text:
         return _ephemeral(
-            f'Usage: `/read [{"|".join(READER_KEYS)}] "book title" pages=N`\n'
+            f'Usage: `/read [{"|".join(READER_KEYS)}] "book title" pages=N`  (pages you read)\n'
+            f'or `/read [{"|".join(READER_KEYS)}] "book title" on page N`  (the page you\'re on)\n'
             "Add `finished` when you finish the book · `audiobook` for ¼ points · "
             "`date=yesterday` to backdate."
         )
@@ -1572,6 +1686,9 @@ async def slash_read(request: Request):
         return _ephemeral(parsed["error"])
     reader = parsed["reader"]
     pages = parsed["pages"]
+    position = parsed.get("position")
+    # How the user said how much they read, echoed back in the unknown-book prompts.
+    amount = f"on page {position}" if position is not None else f"pages={pages}"
     minutes = parsed["minutes"]
     book_raw = parsed["book_raw"]
     fmt_hint = parsed.get("format_hint")
@@ -1590,10 +1707,10 @@ async def slash_read(request: Request):
             return _ephemeral(
                 f"📚 I don't recognise **{book_raw}** yet. What format is it?\n"
                 f"Reply with one of:\n"
-                f'• `/read {reader} "{safe}" pages={pages} format=chapter lexile=750`\n'
-                f'• `/read {reader} "{safe}" pages={pages} format=early` _(easy chapter book)_\n'
-                f'• `/read {reader} "{safe}" pages={pages} format=graphic`\n'
-                f'• `/read {reader} "{safe}" pages={pages} format=easy`\n'
+                f'• `/read {reader} "{safe}" {amount} format=chapter lexile=750`\n'
+                f'• `/read {reader} "{safe}" {amount} format=early` _(easy chapter book)_\n'
+                f'• `/read {reader} "{safe}" {amount} format=graphic`\n'
+                f'• `/read {reader} "{safe}" {amount} format=easy`\n'
                 f"_(Replace 750 with the actual Lexile — look it up at hub.lexile.com)_"
             )
         if fmt_hint is None and inline_lexile is not None:
@@ -1601,7 +1718,7 @@ async def slash_read(request: Request):
         if fmt_hint == "chapter_book" and inline_lexile is None:
             return _ephemeral(
                 f"📚 Adding **{title}** as a chapter book — what's the Lexile?\n"
-                f'`/read {reader} "{safe}" pages={pages} format=chapter lexile=750`\n'
+                f'`/read {reader} "{safe}" {amount} format=chapter lexile=750`\n'
                 f"_(Replace 750 with the real score, or 800 as a default)_"
             )
         if fmt_hint in (
@@ -1635,9 +1752,6 @@ async def slash_read(request: Request):
             f"📚 **{book['title']}** is tagged for upper grades (9+). "
             f"Make sure a parent has previewed the content."
         )
-    result = scoring.compute_points(book, reader, pages, audiobook=audiobook)
-    ppp = result["ppp"]
-    points = result["points"]
     today_local = _today()
     session_date_local = _parse_session_date(date_hint, today_local)
     if session_date_local is None:
@@ -1647,6 +1761,14 @@ async def slash_read(request: Request):
             "_Nothing was logged._"
         )
     is_backdated = session_date_local != today_local
+    if position is not None:
+        return _slash_position_reply(
+            reader, book, position, minutes, finished, audiobook, session_date_local,
+            today_local, ug_warning,
+        )
+    result = scoring.compute_points(book, reader, pages, audiobook=audiobook)
+    ppp = result["ppp"]
+    points = result["points"]
     prev_combined = sum(db.get_total_stats(k)["pts"] for k in READER_KEYS)
     prev_total = db.get_total_stats(reader)["pts"]
     db.log_session(
@@ -1851,7 +1973,7 @@ async def slash_book(request: Request):
             )
             return _ephemeral(
                 f"✅ Added **{title}** as a chapter book at {set_lexile}L\n" + ppp + "\n"
-                f'Log sessions with `/read [name] "{title}" pages=N`'
+                f'Log sessions with `/read [name] "{title}" pages=N` or `... on page N`'
             )
     if book is None:
         return _ephemeral(

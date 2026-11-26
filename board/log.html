@@ -37,6 +37,7 @@
   .modeswitch{display:flex;gap:6px;margin-bottom:16px;background:var(--bg-2);border:1.5px solid var(--ink);border-radius:999px;padding:4px}
   .modeswitch button{flex:1;font-family:var(--mono);font-size:12px;text-transform:uppercase;letter-spacing:.1em;padding:8px;border:0;border-radius:999px;background:transparent;color:var(--ink-2);cursor:pointer;font-weight:600}
   .modeswitch button.on{background:var(--paper);color:var(--ink);box-shadow:0 1px 0 rgba(0,0,0,.15)}
+  .amtswitch{margin:0 0 4px}
   .row{display:flex;gap:12px}
   .row>div{flex:1}
   .book-wrap{position:relative}
@@ -141,9 +142,15 @@
         </div>
       </div>
 
+      <label>How much?</label>
+      <div class="modeswitch amtswitch" role="group" aria-label="How much did you read?">
+        <button id="amt-pages" class="on" type="button" aria-pressed="true">Pages read</button>
+        <button id="amt-page" type="button" aria-pressed="false">Page I'm on</button>
+      </div>
+
       <div class="row">
         <div>
-          <label>Pages</label>
+          <label id="pages-label" for="pages">Pages</label>
           <input id="pages" type="number" inputmode="numeric" min="1" placeholder="0">
         </div>
         <div>
@@ -151,6 +158,8 @@
           <input id="minutes" type="number" inputmode="numeric" min="0" placeholder="0">
         </div>
       </div>
+
+      <div id="amt-hint" class="hint hidden">Counts only pages past what's already logged for this book. Minutes are added to today's total.</div>
 
       <label>Date</label>
       <input id="date" type="date">
@@ -167,7 +176,7 @@
     <div id="cmd" class="cmd hidden">
       <label>Command</label>
       <textarea id="cmdtext" placeholder='"book title" pages=30'></textarea>
-      <div class="hint">Same syntax as the /read slash command · add <b>finished</b>, <b>audiobook</b>, <b>date=yesterday</b>, <b>format=chapter lexile=750</b> for new books.</div>
+      <div class="hint">Same syntax as the /read slash command · <b>pages=30</b> for pages read, or <b>on page 85</b> for the page you're on · add <b>finished</b>, <b>audiobook</b>, <b>date=yesterday</b>, <b>format=chapter lexile=750</b> for new books.</div>
       <button class="submit" id="cmdsubmit" type="button">Run</button>
     </div>
 
@@ -204,6 +213,7 @@
   let CONFIG = {readers:[], formats:[], pin_required:false, max_pages:2000};
   let selected = null;           // {key,title} chosen from catalog
   let readerKey = null;
+  let positionMode = false;      // false = "Pages read", true = "Page I'm on"
   const el = {
     readers:$("#readers"), book:$("#book"), suggest:$("#suggest"), selected:$("#selected"),
     newbook:$("#newbook"), format:$("#format"), lexBlock:$("#lexile-block"), lexile:$("#lexile"),
@@ -283,19 +293,38 @@
   const t=new Date(); el.date.value=`${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,"0")}-${String(t.getDate()).padStart(2,"0")}`;
   document.querySelectorAll(".toggle input").forEach(i=>i.addEventListener("change",()=>i.closest(".toggle").classList.toggle("on",i.checked)));
 
+  // ---------- pages read / page I'm on ----------
+  function setAmountMode(pos){
+    positionMode = pos;
+    $("#amt-pages").classList.toggle("on", !pos); $("#amt-pages").setAttribute("aria-pressed", String(!pos));
+    $("#amt-page").classList.toggle("on", pos);   $("#amt-page").setAttribute("aria-pressed", String(pos));
+    $("#pages-label").textContent = pos ? "Page I'm on" : "Pages";
+    el.pages.min = pos ? "0" : "1";
+    $("#amt-hint").classList.toggle("hidden", !pos);
+  }
+  $("#amt-pages").addEventListener("click",()=>setAmountMode(false));
+  $("#amt-page").addEventListener("click",()=>setAmountMode(true));
+
   // ---------- submit (form) ----------
   $("#form").addEventListener("submit",e=>{e.preventDefault(); submitForm();});
   function submitForm(){
     clearMsg();
     if(!readerKey) return showMsg("Pick who read.",true);
     const pages=parseInt(el.pages.value,10);
-    if(!pages||pages<1) return showMsg("Enter a page count.",true);
     const body={
-      reader:readerKey, pages:pages,
+      reader:readerKey,
       minutes:parseInt(el.minutes.value,10)||0,
       date:el.date.value||undefined,
       finished:el.finished.checked, audiobook:el.audiobook.checked
     };
+    if(positionMode){
+      if(isNaN(pages)||pages<0) return showMsg("Enter the page you're on.",true);
+      // Absolute position; typed minutes are added to the day's total.
+      body.page=pages; body.minutes_mode="add"; body.source="web";
+    } else {
+      if(!pages||pages<1) return showMsg("Enter a page count.",true);
+      body.pages=pages;
+    }
     if(selected){ body.book_key=selected.key; }
     else {
       const title=el.book.value.trim();
@@ -333,7 +362,29 @@
       }).catch(()=>{ el.submit.disabled=false; showMsg("Network error — is the server running?",true); });
   }
 
+  function showPositionResult(d){
+    clearMsg();
+    const evs = (d.events||[]).map(e=>`<div>🎉 ${esc(e)}</div>`).join("");
+    const warn = d.ug_warning?`<div style="color:#7a2c19">⚠️ ${esc(d.ug_warning)}</div>`:"";
+    const added = d.pages_added>0;
+    const head = added ? `<div class="big">+${fmt(d.points_added)} pts</div>` : "";
+    const line = added
+      ? `+${d.pages_added} page${d.pages_added===1?"":"s"} · now on page ${d.page}`
+        + (d.ppp?` · ${d.ppp} pts/pg`:"")
+        + (d.week_pts!==undefined?` &nbsp;•&nbsp; week ${fmt(d.week_pts)} · total ${fmt(d.total_pts)}`:"")
+      : esc(d.message||"Nothing new to log.");
+    el.result.innerHTML =
+      `<div class="who">${esc(d.reader.toUpperCase())}${d.backdated?" · logged for "+esc(d.session_date):""}</div>
+       ${head}
+       <div class="bk">${esc(d.book_title)}${d.audiobook?" 🎧":""}${d.finished?" — finished! 🏁":""}</div>
+       <div class="tot">${line}</div>
+       ${warn}${evs?`<div class="ev">${evs}</div>`:""}`;
+    el.result.className="result show";
+    el.result.scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+
   function showResult(d){
+    if(d.page!==undefined) return showPositionResult(d);
     clearMsg();
     const evs = (d.events||[]).map(e=>`<div>🎉 ${esc(e)}</div>`).join("");
     const warn = d.ug_warning?`<div style="color:#7a2c19">⚠️ ${esc(d.ug_warning)}</div>`:"";

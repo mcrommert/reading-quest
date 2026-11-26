@@ -280,6 +280,7 @@ def upsert_position_row(
     score_fn,
     label: str = "auto",
     max_added: int = None,
+    minutes_mode: str = "max",
 ) -> dict:
     """Move the day's automatic row for this reader+book to the reported page.
 
@@ -292,11 +293,19 @@ def upsert_position_row(
     a print page position is not comparable with listening pages.
     Row pages are monotonic: max(existing, page - other).
 
+    minutes_mode says what `minutes` means: 'max' (default, the scrobbler) is
+    the day's absolute total, so the row keeps max(existing, minutes); 'add' (a
+    person typing "20 more minutes") adds to the row's minutes. With 'add', a
+    post that gains no pages but has minutes still writes them, creating a
+    0-page row if the day has none yet.
+
     score_fn(row_pages) -> (ppp, points). Returns a dict describing what
     happened; "changed" is False when nothing was written. If max_added is set
     and one post would add more pages than that, ValueError is raised and
     nothing is written.
     """
+    if minutes_mode not in ("max", "add"):
+        raise ValueError(f"minutes_mode must be 'max' or 'add', not {minutes_mode!r}")
     now = _utc_now().isoformat()
     conn = get_conn()
     conn.isolation_level = None
@@ -305,7 +314,7 @@ def upsert_position_row(
         try:
             _migrate_sessions(conn)
             row = conn.execute(
-                """SELECT id, pages, minutes, finished, audiobook FROM sessions
+                """SELECT id, pages, minutes, points, finished, audiobook FROM sessions
                    WHERE reader=? AND book_key=? AND session_date=? AND source='position'""",
                 (reader, book_key, session_date),
             ).fetchone()
@@ -321,12 +330,13 @@ def upsert_position_row(
             new_pages = max(old_pages, max(0, page - other))
             if max_added is not None and new_pages - old_pages > max_added:
                 raise ValueError(f"pages_added {new_pages - old_pages} exceeds {max_added}")
-            new_minutes = max(old_minutes, minutes)
+            new_minutes = old_minutes + minutes if minutes_mode == "add" else max(old_minutes, minutes)
             new_fin = old_fin or bool(finished)
             out = {
                 "session_id": row["id"] if row else None,
                 "other_pages": int(other),
                 "old_pages": old_pages,
+                "old_points": float(row["points"]) if row else 0.0,
                 "row_pages": new_pages,
                 "minutes": new_minutes,
                 "finished": new_fin,
@@ -336,7 +346,7 @@ def upsert_position_row(
                 "created": False,
                 "changed": False,
             }
-            if row is None and new_pages == 0 and not new_fin:
+            if row is None and new_pages == 0 and not new_fin and (minutes_mode == "max" or new_minutes == 0):
                 conn.execute("COMMIT")
                 return out
             if row and (new_pages, new_minutes, new_fin) == (old_pages, old_minutes, old_fin):
