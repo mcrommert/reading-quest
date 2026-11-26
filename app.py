@@ -1388,9 +1388,14 @@ async def api_books(q: str = "", limit: int = 8):
     if len(q) < 2:
         return JSONResponse([])
     idx = _build_index(_all_books())
-    matches = process.extract(
-        normalize(q), list(idx.keys()), scorer=fuzz.token_set_ratio, limit=max(limit * 3, 12)
-    )
+    # Same tie-break as find_book: token_set_ratio gives short aliases ("truth")
+    # a perfect score for longer queries, so rank ties by closeness to the whole
+    # query. Score everything first; truncating before the tie-break could drop
+    # the real title from a crowd of tied short aliases.
+    nq = normalize(q)
+    matches = process.extract(nq, list(idx.keys()), scorer=fuzz.token_set_ratio, limit=None)
+    matches.sort(key=lambda m: (m[1], fuzz.ratio(nq, m[0])), reverse=True)
+    matches = matches[: max(limit * 3, 12)]
     seen, out = set(), []
     for alias, score, _ in matches:
         b = idx[alias]

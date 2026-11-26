@@ -44,3 +44,13 @@ def test_closest_alias_wins_a_tie(catalog, query, key):
 
 def test_no_match_below_cutoff(catalog):
     assert app_module.find_book("captain underpants") == (None, 0)
+
+
+def test_suggestions_list_the_closest_title_first(catalog):
+    from fastapi.testclient import TestClient
+
+    with TestClient(app_module.app) as client:
+        r = client.get("/api/books", params={"q": "the fight for truth"})
+    keys = [b["key"] for b in r.json()]
+    assert keys[0] == "sw-jedi-apprentice-the-fight-for-truth"
+    assert "lionboy-the-truth" in keys
