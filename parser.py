@@ -46,6 +46,15 @@ def _extract_int(pattern, text):
 # Sanity ceiling for a single logged session — guards against typos/abuse
 # (e.g. pages=999999999 posting an absurd score).
 MAX_PAGES = 2000
+# Highest absolute print page "on page N" / position logging accepts.
+MAX_POSITION_PAGE = 5000
+
+# "I'm on page N": `on|at page|pg|p|p. N`, or `at=N` / `on=N`. Deliberately NOT
+# `page=N` / `p=N`, which have always meant pages *read* and must keep meaning it.
+_POSITION_RES = (
+    r"\b(?:on|at)\s+(?:pages?|pg|p\.?)\s*(\d+)(?!\w)",
+    r"\b(?:on|at)\s*=\s*(\d+)(?!\w)",
+)
 
 
 def parse_read_command(text: str) -> dict:
@@ -57,8 +66,12 @@ def parse_read_command(text: str) -> dict:
                   alex "book" pages=30 date=2026-06-07
                   alex "book" pages=30 date=yesterday
                   alex "book" pages=30 date=saturday
+                  alex "book" on page 85 min=20   (the page the reader is on)
+                  alex "book" at=85               (same; also `on=85`, `on pg 85`)
 
-    Returns dict with keys: reader, book_raw, pages, minutes, format_hint, date
+    Returns dict with keys: reader, book_raw, pages, position, minutes,
+    format_hint, finished, date, audiobook, lexile. `position` is the absolute
+    print page for "on page N" entries (then `pages` is 0), else None.
     On error: {"error": "..."}
     """
     text = text.strip()
@@ -108,6 +121,13 @@ def parse_read_command(text: str) -> dict:
     if m:
         fmt_hint = FORMATS.get(m.group(1).lower())
         rest = (rest[: m.start()] + rest[m.end() :]).strip()
+    # --- Extract position (on page N, at=N) before pages, so its digits and
+    # words never reach the pages regexes or the title ---
+    position = None
+    for pat in _POSITION_RES:
+        position, rest = _extract_int(pat, rest)
+        if position is not None:
+            break
     # --- Extract pages (pages=N, p=N, Np, N pages) ---
     pages, rest = _extract_int(r"(?:pages?|p)\s*=\s*(\d+)", rest)
     if pages is None:
@@ -130,11 +150,22 @@ def parse_read_command(text: str) -> dict:
     # --- Validate ---
     if not book_raw:
         return {"error": _usage()}
-    if pages is None:
-        return {"error": "Need a page count. Example: `pages=25`"}
-    if pages <= 0:
+    if position is not None and pages is not None:
+        return {
+            "error": (
+                "Give either pages read (`pages=25`) or the page you're on (`on page 85`), "
+                "not both."
+            )
+        }
+    if position is not None:
+        if position > MAX_POSITION_PAGE:
+            return {"error": f"`on page` looks too large (max {MAX_POSITION_PAGE})."}
+        pages = 0
+    elif pages is None:
+        return {"error": "Need a page count or position. Example: `pages=25` or `on page 85`"}
+    elif pages <= 0:
         return {"error": "`pages` must be greater than 0."}
-    if pages > MAX_PAGES:
+    elif pages > MAX_PAGES:
         return {
             "error": f"`pages` looks too large (max {MAX_PAGES}). Split it into multiple sessions."
         }
@@ -146,6 +177,7 @@ def parse_read_command(text: str) -> dict:
         "reader": reader,
         "book_raw": book_raw,
         "pages": pages,
+        "position": position,
         "minutes": minutes,
         "format_hint": fmt_hint,
         "finished": finished,
@@ -162,6 +194,8 @@ def _eg_reader():
 
 def _usage():
     return (
-        f'Usage: `/read [{"|".join(READER_KEYS)}] "book title" pages=N`\n'
-        f'Example: `/read {_eg_reader()} "Junie B Jones 12" pages=25`'
+        f'Usage: `/read [{"|".join(READER_KEYS)}] "book title" pages=N` (pages you read) '
+        f'or `... on page N` (the page you\'re on)\n'
+        f'Example: `/read {_eg_reader()} "Junie B Jones 12" pages=25` · '
+        f'`/read {_eg_reader()} "Junie B Jones 12" on page 85`'
     )

@@ -175,11 +175,19 @@ The `/alexa` endpoint has been removed.
 Open **http://localhost:8602/log** on a phone or the kitchen tablet. Pick a
 reader, search the catalog (or add a new book), enter pages, and submit — it
 scores the session instantly and updates the board. A command bar accepts the
-same shorthand for power users:
+same shorthand for power users (and the Mattermost `/read` command takes it too):
 
 ```
 alex "Frog and Toad Are Friends" pages=30 finished
+alex "Frog and Toad Are Friends" on page 85 min=20
 ```
+
+`pages=25` is how many pages you read. `on page 85` is the page you are *on*; it
+logs only the pages past what is already recorded for that book (see below).
+Accepted position forms (case-insensitive): `on page 85`, `on pg 85`, `on p 85`,
+`on p. 85`, `at page 85`, `at=85`, `on=85`. `page=85` and `p=85` still mean pages
+read. Give one or the other, not both. On the web form, choose **Pages read** or
+**Page I'm on** above the number box.
 
 Mattermost slash commands are an **optional** extra input
 paths — everything works from the browser with nothing else installed. Set
@@ -189,7 +197,11 @@ from outside your home network).
 ### Position logging (`POST /api/log` with `page`)
 
 For automated clients (e.g. a Kindle sync) that know the print page a reader is
-*on* rather than how many pages they read this sitting. Same PIN check as the
+*on* rather than how many pages they read this sitting. People use the same mode
+through `/read ... on page N`, the command bar and the web form's "Page I'm on"
+choice; those entries share the day's `source='position'` row with the
+scrobbler (label `mattermost` or `web`), so a typed position and a Kindle sync on
+the same day reconcile. Same PIN check as the
 other modes (`X-Log-Pin` header or `pin` in the body). Triggered when the JSON
 body has `page` and no `command`:
 
@@ -213,6 +225,13 @@ body has `page` and no `command`:
   position that moves backwards never removes pages. Minutes are
   `max(existing, minutes)`; `finished` is sticky. Points are recomputed from the
   row's total pages; `season` is set on insert and left alone on update.
+- Typed entries differ in two ways. Minutes are **additive** (`min=20` means 20
+  more minutes; the scrobbler's are the day's absolute total), selected with
+  `"minutes_mode": "add"` (default `"max"` when `book_key` is sent). And the book
+  may be given as a typed `book` (with `format`/`lexile` for a new one, same
+  `needs` reply as the pages path) instead of `book_key`. A typed post that adds
+  no pages still records its minutes, and the response carries a `message`
+  such as "Already logged 68 pages of The Fight for Truth; page 60 adds nothing."
 - Everything happens in one transaction. A post that changes nothing (or has no
   row and nothing to log) returns `{"ok": true, "logged": false, "pages_added": 0, ...}`
   and runs no side effects. A post that only raises `minutes` updates the row
